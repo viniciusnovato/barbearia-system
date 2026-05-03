@@ -1,0 +1,1192 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Visagismo · Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./tokens.css" />
+<style>
+  /* Layout do preview */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: var(--space-7) var(--space-5) var(--space-9); }
+  .top { display:flex; justify-content:space-between; align-items:flex-end; gap: var(--space-5); margin-bottom: var(--space-7); }
+  .top h1 { font-size: var(--fs-display); font-weight: 400; }
+  .top .meta { font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--tracking-caps); }
+  section.block { margin-top: var(--space-8); }
+  section.block > h2 { font-size: var(--fs-h2); margin-bottom: var(--space-4); }
+  section.block > .desc { color: var(--text-secondary); margin-bottom: var(--space-5); max-width: 680px; }
+  .grid { display: grid; gap: var(--space-4); }
+  .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .row { display:flex; flex-wrap:wrap; gap: var(--space-3); align-items:center; }
+  hr.sep { border:0; border-top:1px solid var(--border-subtle); margin: var(--space-6) 0; }
+
+  /* Toggle dark */
+  .theme-toggle {
+    display:inline-flex; align-items:center; gap: var(--space-2);
+    padding: 6px 12px; border-radius: var(--radius-full);
+    background: var(--surface-card); border:1px solid var(--border-strong);
+    font-size: var(--fs-body-sm); cursor: pointer;
+  }
+
+  /* Swatches */
+  .swatch { border:1px solid var(--border-subtle); border-radius: var(--radius-md); overflow:hidden; }
+  .swatch .chip { height: 64px; }
+  .swatch .lbl { padding: var(--space-2) var(--space-3); display:flex; justify-content:space-between; font-size: var(--fs-caption); color: var(--text-muted); font-family: var(--font-mono); }
+
+  /* Type sample */
+  .type-row { display:grid; grid-template-columns: 120px 1fr; gap: var(--space-5); align-items: baseline; padding: var(--space-3) 0; border-bottom: 1px solid var(--border-subtle); }
+  .type-row:last-child { border:0; }
+  .type-row .tag { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--tracking-caps); }
+
+  /* Buttons */
+  .btn { display:inline-flex; align-items:center; gap:8px; height:44px; padding: 0 20px; border-radius: var(--radius-md); font-weight:500; transition: all var(--dur-base) var(--ease-out); cursor: pointer; min-width: var(--touch-min); }
+  .btn:focus-visible { box-shadow: var(--shadow-focus); outline: none; }
+  .btn-primary { background: var(--primary-500); color: var(--text-on-primary); box-shadow: var(--shadow-1); }
+  .btn-primary:hover { background: var(--primary-600); }
+  .btn-secondary { background: var(--surface-card); color: var(--text-primary); border:1px solid var(--border-strong); }
+  .btn-secondary:hover { background: var(--surface-sunken); }
+  .btn-ghost { background: transparent; color: var(--text-primary); }
+  .btn-ghost:hover { background: var(--surface-sunken); }
+  .btn-danger { background: var(--danger); color: var(--text-on-primary); }
+  .btn-ai { background: var(--ai-500); color: var(--text-on-ai); position: relative; overflow: hidden; box-shadow: var(--shadow-1); }
+  .btn-ai::before {
+    content:""; position:absolute; inset:0;
+    background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%);
+    background-size: 200% 100%;
+    animation: shimmer 2.4s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  .btn-sm { height: 36px; padding: 0 12px; font-size: var(--fs-body-sm); }
+  .btn-lg { height: 52px; padding: 0 28px; font-size: var(--fs-body-lg); border-radius: var(--radius-lg); }
+
+  /* StatusPill */
+  .pill { display:inline-flex; align-items:center; gap:6px; padding: 0 10px; height: 24px; border-radius: 9999px; font-size: var(--fs-caption); font-weight:500; text-transform: uppercase; letter-spacing: 0.06em; box-shadow: inset 0 0 0 1px currentColor; }
+  .pill .dot { width:6px; height:6px; border-radius:9999px; }
+  .pill.empty    { background: var(--status-empty-bg); color: var(--status-empty-fg); box-shadow: inset 0 0 0 1px var(--status-empty-ring); }
+  .pill.empty .dot    { background: var(--neutral-400); }
+  .pill.suggested { background: var(--status-suggested-bg); color: var(--status-suggested-fg); box-shadow: inset 0 0 0 1px var(--status-suggested-ring); }
+  .pill.suggested .dot { background: var(--ai-500); }
+  .pill.edited   { background: var(--status-edited-bg); color: var(--status-edited-fg); box-shadow: inset 0 0 0 1px var(--status-edited-ring); }
+  .pill.edited .dot   { background: var(--warning); }
+  .pill.approved { background: var(--status-approved-bg); color: var(--status-approved-fg); box-shadow: inset 0 0 0 1px var(--status-approved-ring); }
+  .pill.approved .dot { background: var(--success); }
+  .pill.conflict { background: var(--status-conflict-bg); color: var(--status-conflict-fg); box-shadow: inset 0 0 0 1px var(--status-conflict-ring); }
+  .pill.conflict .dot { background: var(--danger); }
+
+  /* AI indicator */
+  .ai-badge { display:inline-flex; align-items:center; gap:6px; padding: 0 10px; height: 24px; border-radius: 9999px;
+    background: var(--ai-50); color: var(--ai-700); font-size: var(--fs-caption); font-weight: 500;
+    box-shadow: inset 0 0 0 1px var(--ai-200); letter-spacing: 0.04em;
+  }
+  .ai-badge svg { width: 12px; height: 12px; }
+
+  /* FieldCard */
+  .fieldcard { background: var(--surface-card); border:1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-1); transition: box-shadow var(--dur-base) var(--ease-out); }
+  .fieldcard:hover { box-shadow: var(--shadow-2); }
+  .fieldcard.suggested { border-color: var(--status-suggested-ring); }
+  .fieldcard.edited    { border-color: var(--status-edited-ring); }
+  .fieldcard.approved  { border-color: var(--status-approved-ring); }
+  .fieldcard header { display:flex; justify-content:space-between; align-items:flex-start; padding: 16px 20px 0; gap: 12px; }
+  .fieldcard h4 { font-family: var(--font-sans); font-size: var(--fs-body-sm); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); }
+  .fieldcard .helper { font-size: var(--fs-caption); color: var(--text-muted); margin-top: 2px; }
+  .fieldcard .value { font-family: var(--font-display); font-size: var(--fs-h4); line-height: var(--lh-snug); padding: 12px 20px; color: var(--text-primary); font-weight: 400; }
+  .fieldcard .value.empty { font-style: italic; color: var(--text-muted); }
+  .fieldcard footer { display:flex; justify-content:space-between; align-items:center; padding: 8px 20px 16px; border-top: 1px solid var(--border-subtle); margin-top: 8px; }
+  .fieldcard .origem { display:inline-flex; align-items:center; gap: 6px; font-size: var(--fs-body-sm); color: var(--text-secondary); cursor: pointer; }
+  .fieldcard .origem:hover { color: var(--primary-600); }
+  .iconbtn { width:32px; height:32px; border-radius: var(--radius-sm); display:inline-flex; align-items:center; justify-content:center; color: var(--text-muted); cursor: pointer; transition: all var(--dur-fast) var(--ease-out); }
+  .iconbtn:hover { background: var(--surface-sunken); color: var(--text-primary); }
+  .approve-btn { display:inline-flex; align-items:center; gap:6px; height: 32px; padding: 0 12px; border-radius: var(--radius-sm); background: var(--status-approved-bg); color: var(--status-approved-fg); box-shadow: inset 0 0 0 1px var(--status-approved-ring); font-size: var(--fs-body-sm); font-weight: 500; cursor: pointer; }
+
+  /* Recorder */
+  .recorder { background: var(--surface-card); border:1px solid var(--border-subtle); border-radius: var(--radius-2xl); padding: 28px; box-shadow: var(--shadow-3); }
+  .recorder header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px; }
+  .recorder .label { font-family: var(--font-mono); font-size: var(--fs-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+  .recorder .time  { font-family: var(--font-mono); font-size: var(--fs-h3); color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .waveform { display:flex; align-items: flex-end; justify-content: center; gap: 4px; height: 96px; margin-bottom: 28px; }
+  .waveform span { width: 4px; border-radius: 9999px; background: var(--primary-500); transform-origin: bottom; animation: wave 1s var(--ease-in-out) infinite; }
+  @keyframes wave { 0%,100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+  .waveform.idle span { background: var(--neutral-300); animation: none; }
+  .recorder .controls { display:flex; gap: 16px; justify-content: center; }
+  .rec-btn { width:72px; height:72px; border-radius: 9999px; background: var(--danger); color: var(--text-on-primary); display:inline-flex; align-items:center; justify-content:center; box-shadow: var(--shadow-2); position: relative; cursor: pointer; }
+  .rec-btn::after { content:""; position:absolute; inset:0; border-radius: inherit; background: rgba(160,58,27,0.4); animation: pulse 1.6s var(--ease-out) infinite; }
+  @keyframes pulse { 0% { transform: scale(1); opacity: .6; } 100% { transform: scale(1.6); opacity: 0; } }
+  .rec-btn .square { width: 22px; height: 22px; border-radius: 4px; background: currentColor; }
+  .stop-btn { width: 56px; height: 56px; border-radius: 9999px; background: transparent; border:1px solid var(--border-strong); display:inline-flex; align-items:center; justify-content:center; color: var(--text-primary); cursor:pointer; }
+
+  /* ClientCard */
+  .client { display:flex; gap: 16px; align-items:center; padding: 16px; background: var(--surface-card); border-radius: var(--radius-lg); border:1px solid var(--border-subtle); transition: all var(--dur-base) var(--ease-out); cursor: pointer; }
+  .client:hover { box-shadow: var(--shadow-2); border-color: var(--border-strong); }
+  .avatar { width: 56px; height: 56px; border-radius: 9999px; background: linear-gradient(135deg, var(--primary-300), var(--primary-600)); display:flex; align-items:center; justify-content:center; color: var(--text-on-primary); font-family: var(--font-display); font-size: var(--fs-h4); flex-shrink: 0; }
+  .client .info h5 { font-family: var(--font-display); font-size: var(--fs-h4); font-weight: 500; }
+  .client .info p { font-size: var(--fs-body-sm); color: var(--text-muted); margin-top: 2px; }
+  .client .meta { margin-left: auto; text-align: right; font-size: var(--fs-caption); color: var(--text-muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* Section header */
+  .section-header { display:flex; align-items:center; justify-content:space-between; padding: 16px 0; border-bottom: 1px solid var(--border-strong); margin-bottom: 24px; }
+  .section-header h3 { font-family: var(--font-display); font-size: var(--fs-h3); font-weight: 500; }
+  .section-header .progress { display:flex; align-items:center; gap: 8px; }
+  .progress-bar { width: 120px; height: 4px; background: var(--neutral-200); border-radius: 9999px; overflow:hidden; }
+  .progress-bar > span { display:block; height:100%; background: var(--primary-500); }
+  .progress-text { font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--text-muted); }
+
+  /* ============ ANOTAÇÃO iPad ============ */
+  .annotator { background: var(--surface-card); border:1px solid var(--border-subtle); border-radius: var(--radius-2xl); box-shadow: var(--shadow-3); overflow: hidden; }
+  .annotator-head { display:flex; justify-content:space-between; align-items:center; padding: 14px 20px; border-bottom:1px solid var(--border-subtle); }
+  .annotator-head .meta { display:flex; align-items:center; gap: 10px; }
+  .annotator-head .label { font-family: var(--font-mono); font-size: var(--fs-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+  .annotator-head .version { font-family: var(--font-display); font-size: var(--fs-h4); }
+  .annotator-body { display:grid; grid-template-columns: 64px 1fr 220px; gap: 12px; padding: 12px; }
+
+  .toolbar { display:flex; flex-direction:column; gap: 6px; padding: 8px; background: var(--surface-sunken); border-radius: var(--radius-lg); border:1px solid var(--border-subtle); }
+  .toolbar button { width: 44px; height: 44px; border-radius: var(--radius-md); display:inline-flex; align-items:center; justify-content:center; color: var(--text-secondary); cursor:pointer; transition: all var(--dur-fast) var(--ease-out); }
+  .toolbar button:hover { background: var(--surface-card); color: var(--text-primary); }
+  .toolbar button.active { background: var(--primary-500); color: var(--text-on-primary); box-shadow: var(--shadow-1); }
+  .toolbar button:disabled { opacity: 0.3; cursor: not-allowed; }
+  .toolbar .sep { height: 1px; background: var(--border-subtle); margin: 4px 0; }
+  .toolbar .swatches { display:flex; flex-direction:column; gap: 6px; padding: 4px; align-items: center; }
+  .toolbar .swatch-btn { width: 28px; height: 28px; border-radius: 9999px; border:0; padding:0; transition: transform var(--dur-fast) var(--ease-out); }
+  .toolbar .swatch-btn.active { transform: scale(1.2); box-shadow: 0 0 0 2px var(--surface-sunken), 0 0 0 4px var(--primary-500); }
+
+  .canvas-wrap { position: relative; aspect-ratio: 4/3; background: var(--neutral-100); border-radius: var(--radius-lg); overflow: hidden; }
+  .canvas-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+  .canvas-hint { position: absolute; left: 16px; bottom: 12px; padding: 4px 10px; border-radius: 9999px; background: rgba(23,21,15,0.55); color: #FFF; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; pointer-events: none; }
+
+  .versions { background: var(--surface-sunken); border:1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 10px; display:flex; flex-direction:column; gap: 8px; }
+  .versions h6 { font-family: var(--font-mono); font-size: var(--fs-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); padding: 4px 6px; }
+  .version-item { display:flex; align-items:center; gap: 10px; padding: 8px; border-radius: var(--radius-sm); cursor: pointer; transition: background var(--dur-fast) var(--ease-out); }
+  .version-item:hover { background: var(--surface-card); }
+  .version-item.active { background: var(--surface-card); box-shadow: var(--shadow-1); border:1px solid var(--primary-300); }
+  .version-thumb { width: 44px; height: 44px; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--neutral-300), var(--neutral-500)); flex-shrink: 0; }
+  .version-info { display:flex; flex-direction:column; flex:1; min-width:0; }
+  .version-info .vname { font-size: var(--fs-body-sm); color: var(--text-primary); font-weight: 500; overflow:hidden; text-overflow:ellipsis; white-space: nowrap; }
+  .version-info .vmeta { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .annotator-foot { display:flex; justify-content:space-between; padding: 10px 20px; border-top:1px solid var(--border-subtle); font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* ============ iPad LANDSCAPE LAYOUT ============ */
+  .ipad-frame {
+    position: relative;
+    aspect-ratio: 4/3;
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #0E0D08;
+    border-radius: 36px;
+    padding: 14px;
+    box-shadow: var(--shadow-4), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  }
+  .ipad-frame::before { /* câmera */
+    content:""; position: absolute; top: 50%; left: 6px; width: 6px; height: 6px; border-radius: 9999px; background: #2C2920; transform: translateY(-50%);
+  }
+  .ipad-screen {
+    width: 100%; height: 100%;
+    background: var(--surface-page);
+    border-radius: 22px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 240px 1fr 320px;
+    grid-template-rows: 56px 1fr;
+  }
+  .ipad-topbar {
+    grid-column: 1 / -1;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 0 20px;
+    background: var(--surface-card);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .ipad-topbar .crumbs { display:flex; align-items:center; gap: 10px; font-size: var(--fs-body-sm); color: var(--text-secondary); }
+  .ipad-topbar .crumbs strong { color: var(--text-primary); font-weight: 500; font-family: var(--font-display); }
+  .ipad-topbar .actions { display:flex; gap: 10px; align-items:center; }
+
+  .ipad-nav { background: var(--surface-card); border-right: 1px solid var(--border-subtle); padding: 16px 12px; overflow-y: auto; }
+  .ipad-nav h6 { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); padding: 6px 10px; margin-bottom: 4px; }
+  .nav-item { display:flex; justify-content:space-between; align-items:center; padding: 10px 12px; border-radius: var(--radius-sm); font-size: var(--fs-body-sm); color: var(--text-secondary); cursor: pointer; }
+  .nav-item:hover { background: var(--surface-sunken); color: var(--text-primary); }
+  .nav-item.active { background: var(--primary-500); color: var(--text-on-primary); }
+  .nav-item.active .nav-count { color: rgba(255,255,255,0.85); }
+  .nav-count { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+
+  .ipad-main { padding: 20px; overflow-y: auto; }
+  .ipad-main h2 { font-size: var(--fs-h2); margin-bottom: 4px; }
+  .ipad-main .sub { color: var(--text-secondary); font-size: var(--fs-body-sm); margin-bottom: 16px; }
+
+  .ipad-context { background: var(--surface-card); border-left: 1px solid var(--border-subtle); padding: 16px; overflow-y: auto; }
+  .ipad-context h6 { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 12px; }
+  .block-item { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-sunken); margin-bottom: 8px; cursor: pointer; transition: all var(--dur-fast) var(--ease-out); border-left: 3px solid transparent; }
+  .block-item:hover { border-left-color: var(--primary-400); }
+  .block-item.linked { border-left-color: var(--ai-500); background: var(--status-suggested-bg); }
+  .block-item .who { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 4px; }
+  .block-item .who.client { color: var(--ai-600); }
+  .block-item .text { font-size: var(--fs-body-sm); line-height: 1.45; color: var(--text-primary); }
+  .block-item .intent { display:inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 9999px; background: var(--ai-100); color: var(--ai-700); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+
+  .handedness { display:inline-flex; align-items:center; gap: 4px; padding: 4px; background: var(--surface-sunken); border-radius: 9999px; font-size: var(--fs-caption); }
+  .handedness button { padding: 4px 10px; border-radius: 9999px; color: var(--text-muted); cursor: pointer; }
+  .handedness button.active { background: var(--surface-card); color: var(--text-primary); box-shadow: var(--shadow-1); }
+
+  @media (max-width: 760px) {
+    .grid.cols-2, .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr; }
+    .top { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="top">
+    <div>
+      <p class="meta">v0.1 · Design System</p>
+      <h1>Visagismo</h1>
+      <p style="margin-top: 8px; color: var(--text-secondary); max-width: 560px;">
+        Sistema de design para o app de consultoria de imagem masculina. Editorial, sóbrio, masculino — uma ferramenta profissional, não um app de salão.
+      </p>
+    </div>
+    <button class="theme-toggle" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'">
+      <span id="theme-icon">◐</span> Alternar tema
+    </button>
+  </div>
+
+  <!-- COR -->
+  <section class="block">
+    <h2>1. Cor</h2>
+    <p class="desc">Neutros quentes como base, bronze profundo como primária, índigo dessaturado para sinalizar conteúdo de IA.</p>
+
+    <h4 style="font-family: var(--font-mono); font-size: var(--fs-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px;">Primária — Bronze</h4>
+    <div class="grid cols-4" style="margin-bottom: 24px;">
+      <div class="swatch"><div class="chip" style="background: var(--primary-100)"></div><div class="lbl"><span>primary-100</span><span>#EFE0C5</span></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--primary-300)"></div><div class="lbl"><span>primary-300</span><span>#C9A05A</span></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--primary-500)"></div><div class="lbl"><span>primary-500</span><span>#8E6A30</span></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--primary-700)"></div><div class="lbl"><span>primary-700</span><span>#553E1D</span></div></div>
+    </div>
+
+    <h4 style="font-family: var(--font-mono); font-size: var(--fs-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px;">Acento IA — Índigo dessaturado</h4>
+    <div class="grid cols-4" style="margin-bottom: 24px;">
+      <div class="swatch"><div class="chip" style="background: var(--ai-100)"></div><div class="lbl"><span>ai-100</span><span>#D9DEEE</span></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--ai-300)"></div><div class="lbl"><span>ai-300</span><span>#8E96C2</span></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--ai-500)"></div><div class="lbl"><span>ai-500</span><span>#535B89</span></div></div>
+      <div class="swatch"><div class="chip" style="background: var(--ai-700)"></div><div class="lbl"><span>ai-700</span><span>#2F3450</span></div></div>
+    </div>
+
+    <h4 style="font-family: var(--font-mono); font-size: var(--fs-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px;">Status semântico</h4>
+    <div class="row">
+      <span class="pill empty"><span class="dot"></span>Vazio</span>
+      <span class="pill suggested"><span class="dot"></span>Sugerido pela IA</span>
+      <span class="pill edited"><span class="dot"></span>Editado</span>
+      <span class="pill approved"><span class="dot"></span>Aprovado</span>
+      <span class="pill conflict"><span class="dot"></span>Contradição</span>
+    </div>
+  </section>
+
+  <hr class="sep" />
+
+  <!-- TIPOGRAFIA -->
+  <section class="block">
+    <h2>2. Tipografia</h2>
+    <p class="desc">Fraunces (serifa contemporânea) para títulos editoriais e capa do PDF. Inter para UI. JetBrains Mono para metadados, timestamps e estados técnicos.</p>
+
+    <div class="type-row">
+      <span class="tag">Display 56</span>
+      <span style="font-family: var(--font-display); font-size: var(--fs-display); font-weight: 400; line-height: 1.05; letter-spacing: -0.02em;">Imagem é estratégia.</span>
+    </div>
+    <div class="type-row">
+      <span class="tag">H1 40</span>
+      <span style="font-family: var(--font-display); font-size: var(--fs-h1); font-weight: 500;">Diagnóstico do cliente</span>
+    </div>
+    <div class="type-row">
+      <span class="tag">H3 24</span>
+      <span style="font-family: var(--font-display); font-size: var(--fs-h3); font-weight: 500;">Direcionamento de corte</span>
+    </div>
+    <div class="type-row">
+      <span class="tag">Body 16</span>
+      <span style="font-size: var(--fs-body);">A imagem atual comunica informalidade e juventude, mas ainda não reforça plenamente a autoridade desejada pelo cliente.</span>
+    </div>
+    <div class="type-row">
+      <span class="tag">Caption 12</span>
+      <span style="font-size: var(--fs-caption); text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary);">Sugerido pela IA · Aguardando revisão</span>
+    </div>
+    <div class="type-row">
+      <span class="tag">Mono 13</span>
+      <span style="font-family: var(--font-mono); font-size: var(--fs-mono);">14:32 · barbeiro · bloco_07</span>
+    </div>
+  </section>
+
+  <hr class="sep" />
+
+  <!-- BOTÕES -->
+  <section class="block">
+    <h2>3. Botões</h2>
+    <p class="desc">Variantes funcionais. <code style="font-family:var(--font-mono); font-size:var(--fs-mono); background:var(--surface-sunken); padding:2px 6px; border-radius:4px;">ai</code> tem shimmer sutil para distinguir ações conduzidas por IA.</p>
+    <div class="row" style="margin-bottom: 12px;">
+      <button class="btn btn-primary">Gerar dossiê</button>
+      <button class="btn btn-secondary">Editar campo</button>
+      <button class="btn btn-ghost">Cancelar</button>
+      <button class="btn btn-danger">Descartar</button>
+      <button class="btn btn-ai">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2.5l1.8 5.7 5.7 1.8-5.7 1.8L12 17.5l-1.8-5.7-5.7-1.8 5.7-1.8L12 2.5z"/></svg>
+        Reanalisar com IA
+      </button>
+    </div>
+    <div class="row">
+      <button class="btn btn-primary btn-sm">SM</button>
+      <button class="btn btn-primary">MD (default)</button>
+      <button class="btn btn-primary btn-lg">LG · iPad-friendly</button>
+    </div>
+  </section>
+
+  <hr class="sep" />
+
+  <!-- AI INDICATOR -->
+  <section class="block">
+    <h2>4. Indicador de IA</h2>
+    <p class="desc">Sempre que um conteúdo vem da IA, sinalize. Permite revisão consciente.</p>
+    <div class="row">
+      <span class="ai-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.8 5.7 5.7 1.8-5.7 1.8L12 17.5l-1.8-5.7-5.7-1.8 5.7-1.8L12 2.5z"/></svg>Sugerido pela IA</span>
+      <span class="ai-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.8 5.7 5.7 1.8-5.7 1.8L12 17.5l-1.8-5.7-5.7-1.8 5.7-1.8L12 2.5z"/></svg>Pronto para revisão</span>
+      <span class="ai-badge"><svg viewBox="0 0 24 24" fill="currentColor" style="animation: spin 1.2s linear infinite;"><path d="M12 2.5l1.8 5.7 5.7 1.8-5.7 1.8L12 17.5l-1.8-5.7-5.7-1.8 5.7-1.8L12 2.5z"/></svg>Processando…</span>
+    </div>
+    <style>@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }</style>
+  </section>
+
+  <hr class="sep" />
+
+  <!-- FIELDCARD -->
+  <section class="block">
+    <h2>5. FieldCard — coração do dossiê</h2>
+    <p class="desc">Cada campo do dossiê tem status, origem rastreável até a transcrição, e ações inline. Cor da borda reflete o estado.</p>
+
+    <div class="grid cols-2">
+
+      <!-- Vazio -->
+      <article class="fieldcard">
+        <header>
+          <div>
+            <h4>Momento de vida atual</h4>
+            <p class="helper">Resuma o contexto atual do cliente em 1-2 frases</p>
+          </div>
+          <span class="pill empty"><span class="dot"></span>Vazio</span>
+        </header>
+        <div class="value empty">Aguardando preenchimento…</div>
+        <footer>
+          <span></span>
+          <button class="iconbtn" title="Editar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16.5 3.5l4 4L7 21H3v-4L16.5 3.5z" stroke-linejoin="round"/></svg></button>
+        </footer>
+      </article>
+
+      <!-- Sugerido -->
+      <article class="fieldcard suggested">
+        <header>
+          <div>
+            <h4>Objetivo de imagem</h4>
+            <p class="helper">Intenção principal que o cliente quer transmitir</p>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <span class="ai-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2.5l1.8 5.7 5.7 1.8-5.7 1.8L12 17.5l-1.8-5.7-5.7-1.8 5.7-1.8L12 2.5z"/></svg>IA</span>
+            <span class="pill suggested"><span class="dot"></span>Sugerido</span>
+          </div>
+        </header>
+        <div class="value">Transmitir autoridade, maturidade e confiança, mantendo uma imagem moderna e acessível.</div>
+        <footer>
+          <span class="origem">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 7h4v4H8v3H5V9a2 2 0 012-2zm9 0h4v4h-3v3h-3V9a2 2 0 012-2z"/></svg>
+            Ver origem (3)
+          </span>
+          <div style="display:flex; gap:4px;">
+            <button class="iconbtn" title="Descartar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" stroke-linejoin="round" stroke-linecap="round"/></svg></button>
+            <button class="iconbtn" title="Editar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16.5 3.5l4 4L7 21H3v-4L16.5 3.5z" stroke-linejoin="round"/></svg></button>
+            <button class="approve-btn">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+              Aprovar
+            </button>
+          </div>
+        </footer>
+      </article>
+
+      <!-- Editado -->
+      <article class="fieldcard edited">
+        <header>
+          <div>
+            <h4>Como a imagem atual comunica</h4>
+          </div>
+          <span class="pill edited"><span class="dot"></span>Editado</span>
+        </header>
+        <div class="value">A imagem atual comunica informalidade e juventude, sem ainda reforçar a autoridade desejada pelo cliente em ambientes profissionais.</div>
+        <footer>
+          <span class="origem"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 7h4v4H8v3H5V9a2 2 0 012-2zm9 0h4v4h-3v3h-3V9a2 2 0 012-2z"/></svg>Ver origem (2)</span>
+          <button class="approve-btn">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+            Aprovar
+          </button>
+        </footer>
+      </article>
+
+      <!-- Aprovado -->
+      <article class="fieldcard approved">
+        <header>
+          <div>
+            <h4>Estilo de corte ideal</h4>
+          </div>
+          <span class="pill approved"><span class="dot"></span>Aprovado</span>
+        </header>
+        <div class="value">Degradê médio com topo estruturado, ideal para reforçar autoridade e manter uma imagem moderna sem perder elegância.</div>
+        <footer>
+          <span class="origem"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 7h4v4H8v3H5V9a2 2 0 012-2zm9 0h4v4h-3v3h-3V9a2 2 0 012-2z"/></svg>Ver origem (1)</span>
+          <button class="iconbtn" title="Editar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16.5 3.5l4 4L7 21H3v-4L16.5 3.5z" stroke-linejoin="round"/></svg></button>
+        </footer>
+      </article>
+
+    </div>
+  </section>
+
+  <hr class="sep" />
+
+  <!-- AUDIO RECORDER -->
+  <section class="block">
+    <h2>6. AudioRecorder</h2>
+    <p class="desc">Tela cheia durante o atendimento. Botão grande, waveform reativa, contador em mono tabular.</p>
+    <div class="grid cols-2">
+      <div class="recorder">
+        <header>
+          <span class="label">Gravando conversa</span>
+          <span class="time">04:32</span>
+        </header>
+        <div class="waveform" id="wave-live"></div>
+        <div class="controls">
+          <button class="rec-btn" aria-label="Pausar">
+            <span class="square"></span>
+          </button>
+          <button class="stop-btn" aria-label="Finalizar">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5l4.5 4.5L19 7.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="recorder">
+        <header>
+          <span class="label">Toque para gravar</span>
+          <span class="time">00:00</span>
+        </header>
+        <div class="waveform idle" id="wave-idle"></div>
+        <div class="controls">
+          <button class="rec-btn" aria-label="Iniciar gravação" style="background: var(--primary-500);">
+            <span style="width:22px; height:22px; border-radius:9999px; background: currentColor;"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="sep" />
+
+  <!-- CLIENTS -->
+  <section class="block">
+    <h2>7. Lista de clientes</h2>
+    <p class="desc">Avatar com gradiente bronze, dados essenciais, último atendimento à direita.</p>
+    <div class="grid">
+      <div class="client">
+        <div class="avatar">LS</div>
+        <div class="info">
+          <h5>Lucas Silva</h5>
+          <p>3 dossiês · Reposicionamento profissional</p>
+        </div>
+        <div class="meta">há 12 dias</div>
+      </div>
+      <div class="client">
+        <div class="avatar">RM</div>
+        <div class="info">
+          <h5>Rafael Mendes</h5>
+          <p>1 dossiê · Atualização de imagem</p>
+        </div>
+        <div class="meta">há 3 meses</div>
+      </div>
+      <div class="client">
+        <div class="avatar">JP</div>
+        <div class="info">
+          <h5>João Pedro Albuquerque</h5>
+          <p>5 dossiês · Manutenção contínua</p>
+        </div>
+        <div class="meta">há 5 dias</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="sep" />
+
+  <!-- SECTION HEADER + PROGRESS -->
+  <section class="block">
+    <h2>8. Cabeçalho de seção do dossiê</h2>
+    <p class="desc">Cada seção (Diagnóstico, Análise Visagista, etc.) mostra progresso de campos aprovados.</p>
+    <div>
+      <div class="section-header">
+        <h3>Diagnóstico</h3>
+        <div class="progress">
+          <div class="progress-bar"><span style="width: 66%"></span></div>
+          <span class="progress-text">4 / 6 aprovados</span>
+        </div>
+      </div>
+      <div class="section-header">
+        <h3>Análise Visagista</h3>
+        <div class="progress">
+          <div class="progress-bar"><span style="width: 14%"></span></div>
+          <span class="progress-text">1 / 7 aprovados</span>
+        </div>
+      </div>
+      <div class="section-header" style="border-bottom: none;">
+        <h3>Direcionamento de corte</h3>
+        <div class="progress">
+          <div class="progress-bar"><span style="width: 100%; background: var(--success);"></span></div>
+          <span class="progress-text" style="color: var(--success);">Completo</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="sep" />
+
+  <!-- iPad ANNOTATOR -->
+  <section class="block">
+    <h2>10. Análise visual no iPad</h2>
+    <p class="desc">
+      Anotador funcional sobre a foto do cliente. Suporta caneta livre, marcador, borracha, seta e círculo,
+      com pressão dinâmica via Apple Pencil (Pointer Events). Tente desenhar abaixo — funciona com mouse, dedo ou Pencil.
+    </p>
+
+    <div class="annotator">
+      <div class="annotator-head">
+        <div class="meta">
+          <span class="label">Análise visual · Lucas Silva</span>
+          <span style="color: var(--text-muted)">·</span>
+          <span class="version" id="annoVersionName">Análise inicial</span>
+        </div>
+        <div style="display:flex; gap: 10px; align-items:center;">
+          <span class="handedness">
+            <button class="active" id="hand-r">Destra</button>
+            <button id="hand-l">Canhota</button>
+          </span>
+          <button class="btn btn-primary btn-sm" id="annoSave">Salvar versão</button>
+        </div>
+      </div>
+
+      <div class="annotator-body" id="annoBody">
+        <div class="toolbar">
+          <button class="active" data-tool="pen" title="Caneta">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5l4 4L7 21H3v-4L16.5 3.5z"/></svg>
+          </button>
+          <button data-tool="marker" title="Marcador">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19h14M14 4l6 6-9 9H5v-6l9-9z"/></svg>
+          </button>
+          <button data-tool="eraser" title="Borracha">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19l8-8 6 6-2 2H3zM10 12l9-9 4 4-9 9"/></svg>
+          </button>
+          <button data-tool="arrow" title="Seta">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L19 5M19 5h-7M19 5v7"/></svg>
+          </button>
+          <button data-tool="circle" title="Círculo">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/></svg>
+          </button>
+          <button data-tool="line" title="Linha">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 19L19 5"/></svg>
+          </button>
+          <div class="sep"></div>
+          <div class="swatches">
+            <button class="swatch-btn active" data-color="#A03A1B" style="background:#A03A1B"></button>
+            <button class="swatch-btn" data-color="#8E6A30" style="background:#8E6A30"></button>
+            <button class="swatch-btn" data-color="#535B89" style="background:#535B89"></button>
+            <button class="swatch-btn" data-color="#4F8C3F" style="background:#4F8C3F"></button>
+            <button class="swatch-btn" data-color="#FAFAF7" style="background:#FAFAF7; box-shadow: inset 0 0 0 1px var(--border-strong);"></button>
+          </div>
+          <div class="sep"></div>
+          <button id="annoUndo" title="Desfazer" disabled>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5M4 9h11a5 5 0 010 10h-2"/></svg>
+          </button>
+          <button id="annoRedo" title="Refazer" disabled>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5M20 9H9a5 5 0 000 10h2"/></svg>
+          </button>
+          <button id="annoClear" title="Limpar tudo">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+          </button>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="annoCanvas"></canvas>
+          <span class="canvas-hint">Desenhe sobre a foto · pressão suportada</span>
+        </div>
+
+        <div class="versions">
+          <h6>Versões</h6>
+          <div class="version-item active">
+            <div class="version-thumb" style="background:linear-gradient(135deg,#3A362E,#100E09)"></div>
+            <div class="version-info">
+              <span class="vname">Análise inicial</span>
+              <span class="vmeta">Hoje · 14:32</span>
+            </div>
+          </div>
+          <div class="version-item">
+            <div class="version-thumb" style="background:linear-gradient(135deg,#553E1D,#3A362E)"></div>
+            <div class="version-info">
+              <span class="vname">Linha de contorno</span>
+              <span class="vmeta">Hoje · 14:48</span>
+            </div>
+          </div>
+          <div class="version-item">
+            <div class="version-thumb" style="background:linear-gradient(135deg,#8E6A30,#553E1D)"></div>
+            <div class="version-info">
+              <span class="vname">Direção do corte</span>
+              <span class="vmeta">Hoje · 15:02</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="annotator-foot">
+        <span id="annoCount">0 marcações</span>
+        <span>Apple Pencil · pressão dinâmica · palm rejection</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="sep" />
+
+  <!-- iPad LANDSCAPE LAYOUT -->
+  <section class="block">
+    <h2>11. Layout iPad — landscape</h2>
+    <p class="desc">
+      Composição típica do editor de dossiê em iPad horizontal: <strong>nav</strong> com seções e progresso à esquerda,
+      <strong>campos</strong> no centro, <strong>transcrição contextual</strong> à direita.
+      Hover nos blocos da direita simula o destaque do campo de origem.
+    </p>
+
+    <div class="ipad-frame">
+      <div class="ipad-screen">
+
+        <!-- Topbar -->
+        <header class="ipad-topbar">
+          <div class="crumbs">
+            <span>Clientes</span>
+            <span>/</span>
+            <span>Lucas Silva</span>
+            <span>/</span>
+            <strong>Reposicionamento profissional · 03/05/2026</strong>
+          </div>
+          <div class="actions">
+            <span class="ai-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2.5l1.8 5.7 5.7 1.8-5.7 1.8L12 17.5l-1.8-5.7-5.7-1.8 5.7-1.8L12 2.5z"/></svg>Pronto para revisão</span>
+            <button class="btn btn-primary btn-sm">Gerar dossiê</button>
+          </div>
+        </header>
+
+        <!-- Nav -->
+        <nav class="ipad-nav">
+          <h6>Seções</h6>
+          <div class="nav-item active">
+            <span>Diagnóstico</span>
+            <span class="nav-count">4 / 6</span>
+          </div>
+          <div class="nav-item">
+            <span>Análise Visagista</span>
+            <span class="nav-count">1 / 7</span>
+          </div>
+          <div class="nav-item">
+            <span>Direcionamento de corte</span>
+            <span class="nav-count" style="color: var(--success)">✓</span>
+          </div>
+          <div class="nav-item">
+            <span>Direcionamento de barba</span>
+            <span class="nav-count">0 / 4</span>
+          </div>
+          <div class="nav-item">
+            <span>Produtos</span>
+            <span class="nav-count">2</span>
+          </div>
+          <div class="nav-item">
+            <span>Projeto Final</span>
+            <span class="nav-count">0 / 4</span>
+          </div>
+          <div class="nav-item">
+            <span>Finalização</span>
+            <span class="nav-count">—</span>
+          </div>
+        </nav>
+
+        <!-- Main -->
+        <main class="ipad-main">
+          <h2>Diagnóstico</h2>
+          <p class="sub">Contexto, objetivos e percepção atual da imagem.</p>
+
+          <div class="grid" style="gap: 12px;">
+            <article class="fieldcard suggested">
+              <header>
+                <div><h4>Objetivo de imagem</h4></div>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <span class="ai-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2.5l1.8 5.7 5.7 1.8-5.7 1.8L12 17.5l-1.8-5.7-5.7-1.8 5.7-1.8L12 2.5z"/></svg>IA</span>
+                  <span class="pill suggested"><span class="dot"></span>Sugerido</span>
+                </div>
+              </header>
+              <div class="value">Transmitir autoridade, maturidade e confiança, mantendo uma imagem moderna e acessível.</div>
+              <footer>
+                <span class="origem" data-origin="block-1 block-3">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 7h4v4H8v3H5V9a2 2 0 012-2zm9 0h4v4h-3v3h-3V9a2 2 0 012-2z"/></svg>
+                  Ver origem (2)
+                </span>
+                <button class="approve-btn">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+                  Aprovar
+                </button>
+              </footer>
+            </article>
+
+            <article class="fieldcard approved">
+              <header>
+                <div><h4>Profissão / contexto profissional</h4></div>
+                <span class="pill approved"><span class="dot"></span>Aprovado</span>
+              </header>
+              <div class="value">Atua com vendas e atendimento a empresários, exigindo imagem confiável e alinhada à autoridade.</div>
+              <footer>
+                <span class="origem" data-origin="block-2"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 7h4v4H8v3H5V9a2 2 0 012-2zm9 0h4v4h-3v3h-3V9a2 2 0 012-2z"/></svg>Ver origem (1)</span>
+              </footer>
+            </article>
+
+            <article class="fieldcard edited">
+              <header>
+                <div><h4>Como a imagem atual comunica</h4></div>
+                <span class="pill edited"><span class="dot"></span>Editado</span>
+              </header>
+              <div class="value">A imagem atual comunica informalidade e juventude, sem ainda reforçar a autoridade desejada em ambientes profissionais.</div>
+              <footer>
+                <span class="origem" data-origin="block-4"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 7h4v4H8v3H5V9a2 2 0 012-2zm9 0h4v4h-3v3h-3V9a2 2 0 012-2z"/></svg>Ver origem (1)</span>
+                <button class="approve-btn">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+                  Aprovar
+                </button>
+              </footer>
+            </article>
+          </div>
+        </main>
+
+        <!-- Context (transcript) -->
+        <aside class="ipad-context">
+          <h6>Blocos da transcrição</h6>
+          <div class="block-item linked" data-id="block-1">
+            <div class="who client">Cliente · 02:14</div>
+            <div class="text">"Quero que as pessoas me vejam com mais autoridade, sabe? Mais maduro, mas sem perder a leveza."</div>
+            <span class="intent">Objetivo de imagem</span>
+          </div>
+          <div class="block-item" data-id="block-2">
+            <div class="who client">Cliente · 03:08</div>
+            <div class="text">"Trabalho com vendas, atendo muito empresário, então preciso passar segurança."</div>
+            <span class="intent">Profissão</span>
+          </div>
+          <div class="block-item linked" data-id="block-3">
+            <div class="who client">Cliente · 03:42</div>
+            <div class="text">"Quero algo moderno, mas sem exagero. Não quero parecer desleixado nem velho."</div>
+            <span class="intent">Objetivo de imagem</span>
+          </div>
+          <div class="block-item" data-id="block-4">
+            <div class="who">Barbeiro · 04:21</div>
+            <div class="text">"Vejo que sua imagem hoje passa muita juventude — o cabelo tem muito volume, o que reforça isso."</div>
+            <span class="intent">Análise técnica</span>
+          </div>
+          <div class="block-item" data-id="block-5">
+            <div class="who client">Cliente · 05:03</div>
+            <div class="text">"Ah entendi… faz sentido, sim."</div>
+            <span class="intent" style="background: var(--neutral-200); color: var(--text-muted)">Ruído (ignorado)</span>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+
+    <p style="text-align:center; margin-top: 16px; font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;">
+      iPad Pro 12.9" · landscape · 1024 × 768 lógico
+    </p>
+  </section>
+
+  <hr class="sep" />
+
+  <!-- ELEVATION -->
+  <section class="block">
+    <h2>9. Elevação</h2>
+    <p class="desc">Sombras suaves em camadas. Sem drop-shadow agressivo.</p>
+    <div class="grid cols-4">
+      <div style="background: var(--surface-card); border-radius: var(--radius-md); padding: 24px; text-align:center; box-shadow: var(--shadow-1); font-family: var(--font-mono); font-size: var(--fs-mono);">shadow-1</div>
+      <div style="background: var(--surface-card); border-radius: var(--radius-md); padding: 24px; text-align:center; box-shadow: var(--shadow-2); font-family: var(--font-mono); font-size: var(--fs-mono);">shadow-2</div>
+      <div style="background: var(--surface-card); border-radius: var(--radius-md); padding: 24px; text-align:center; box-shadow: var(--shadow-3); font-family: var(--font-mono); font-size: var(--fs-mono);">shadow-3</div>
+      <div style="background: var(--surface-card); border-radius: var(--radius-md); padding: 24px; text-align:center; box-shadow: var(--shadow-4); font-family: var(--font-mono); font-size: var(--fs-mono);">shadow-4</div>
+    </div>
+  </section>
+
+  <p style="margin-top: var(--space-9); text-align:center; font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em;">
+    Visagismo Design System · v0.1
+  </p>
+
+</div>
+
+<script>
+  // Waveform "ao vivo" — barras animadas com alturas variáveis
+  const waveLive = document.getElementById('wave-live');
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement('span');
+    s.style.height = (30 + Math.random() * 70) + '%';
+    s.style.animationDelay = (i * 30) + 'ms';
+    s.style.animationDuration = (700 + Math.random() * 600) + 'ms';
+    waveLive.appendChild(s);
+  }
+  // Waveform idle — barras estáticas baixas
+  const waveIdle = document.getElementById('wave-idle');
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement('span');
+    s.style.height = (20 + Math.random() * 30) + '%';
+    waveIdle.appendChild(s);
+  }
+
+  // ============================================================
+  // ANNOTATOR — desenho com pressão (Pointer Events) sobre "foto"
+  // ============================================================
+  (function initAnnotator() {
+    const canvas    = document.getElementById('annoCanvas');
+    const ctx       = canvas.getContext('2d');
+    const undoBtn   = document.getElementById('annoUndo');
+    const redoBtn   = document.getElementById('annoRedo');
+    const clearBtn  = document.getElementById('annoClear');
+    const saveBtn   = document.getElementById('annoSave');
+    const countLbl  = document.getElementById('annoCount');
+    const handR     = document.getElementById('hand-r');
+    const handL     = document.getElementById('hand-l');
+    const body      = document.getElementById('annoBody');
+
+    let tool   = 'pen';
+    let color  = '#A03A1B';
+    let strokes = [];
+    let redoStack = [];
+    let drawing = false;
+    let current = null;
+
+    // Backing photo (pintada no canvas como "foto" do cliente)
+    const photo = document.createElement('canvas');
+    function paintPhoto(w, h) {
+      photo.width = w; photo.height = h;
+      const p = photo.getContext('2d');
+      // BG
+      const bg = p.createLinearGradient(0, 0, 0, h);
+      bg.addColorStop(0, '#2C2920'); bg.addColorStop(1, '#100E09');
+      p.fillStyle = bg; p.fillRect(0, 0, w, h);
+      // luz lateral
+      const glow = p.createRadialGradient(w*0.3, h*0.35, 20, w*0.5, h*0.5, w*0.7);
+      glow.addColorStop(0, 'rgba(201,164,128,0.18)'); glow.addColorStop(1, 'rgba(0,0,0,0)');
+      p.fillStyle = glow; p.fillRect(0, 0, w, h);
+
+      const cx = w/2, cy = h*0.55;
+      const fw = w * 0.22, fh = h * 0.42;
+
+      // Hair (back / nuca)
+      p.fillStyle = '#0E0D08';
+      p.beginPath(); p.ellipse(cx, cy - fh*0.32, fw*1.18, fh*0.78, 0, 0, Math.PI*2); p.fill();
+
+      // Pescoço
+      p.fillStyle = '#8E6A30';
+      p.beginPath();
+      p.moveTo(cx - fw*0.45, cy + fh*0.55);
+      p.lineTo(cx - fw*0.55, cy + fh);
+      p.lineTo(cx + fw*0.55, cy + fh);
+      p.lineTo(cx + fw*0.45, cy + fh*0.55);
+      p.closePath(); p.fill();
+
+      // Face
+      const skin = p.createLinearGradient(cx, cy - fh, cx, cy + fh);
+      skin.addColorStop(0, '#D4B48F'); skin.addColorStop(1, '#8E6A30');
+      p.fillStyle = skin;
+      p.beginPath(); p.ellipse(cx, cy, fw*0.92, fh*0.62, 0, 0, Math.PI*2); p.fill();
+
+      // Cabelo topo (com forma)
+      p.fillStyle = '#17150F';
+      p.beginPath();
+      p.moveTo(cx - fw*0.95, cy - fh*0.25);
+      p.quadraticCurveTo(cx - fw*0.7, cy - fh*0.85, cx, cy - fh*0.85);
+      p.quadraticCurveTo(cx + fw*0.7, cy - fh*0.85, cx + fw*0.95, cy - fh*0.20);
+      p.quadraticCurveTo(cx + fw*0.55, cy - fh*0.55, cx, cy - fh*0.45);
+      p.quadraticCurveTo(cx - fw*0.55, cy - fh*0.55, cx - fw*0.95, cy - fh*0.25);
+      p.closePath(); p.fill();
+
+      // Barba
+      p.fillStyle = 'rgba(23,21,15,0.85)';
+      p.beginPath();
+      p.moveTo(cx - fw*0.78, cy + fh*0.05);
+      p.quadraticCurveTo(cx - fw*0.55, cy + fh*0.55, cx, cy + fh*0.6);
+      p.quadraticCurveTo(cx + fw*0.55, cy + fh*0.55, cx + fw*0.78, cy + fh*0.05);
+      p.quadraticCurveTo(cx + fw*0.55, cy + fh*0.25, cx, cy + fh*0.22);
+      p.quadraticCurveTo(cx - fw*0.55, cy + fh*0.25, cx - fw*0.78, cy + fh*0.05);
+      p.closePath(); p.fill();
+
+      // Olhos
+      p.fillStyle = '#17150F';
+      p.beginPath(); p.ellipse(cx - fw*0.32, cy - fh*0.08, 5, 3, 0, 0, Math.PI*2); p.fill();
+      p.beginPath(); p.ellipse(cx + fw*0.32, cy - fh*0.08, 5, 3, 0, 0, Math.PI*2); p.fill();
+
+      // Sobrancelhas
+      p.strokeStyle = '#17150F'; p.lineWidth = 3.5; p.lineCap = 'round';
+      p.beginPath(); p.moveTo(cx - fw*0.46, cy - fh*0.18); p.quadraticCurveTo(cx - fw*0.32, cy - fh*0.24, cx - fw*0.18, cy - fh*0.16); p.stroke();
+      p.beginPath(); p.moveTo(cx + fw*0.18, cy - fh*0.16); p.quadraticCurveTo(cx + fw*0.32, cy - fh*0.24, cx + fw*0.46, cy - fh*0.18); p.stroke();
+
+      // Nariz
+      p.strokeStyle = 'rgba(23,21,15,0.4)'; p.lineWidth = 2;
+      p.beginPath();
+      p.moveTo(cx - 2, cy - fh*0.06);
+      p.quadraticCurveTo(cx - 8, cy + fh*0.12, cx - 4, cy + fh*0.16);
+      p.lineTo(cx + 6, cy + fh*0.16);
+      p.stroke();
+
+      // Boca (sob barba)
+      p.strokeStyle = 'rgba(40,28,20,0.7)'; p.lineWidth = 2.2;
+      p.beginPath();
+      p.moveTo(cx - 14, cy + fh*0.30);
+      p.quadraticCurveTo(cx, cy + fh*0.34, cx + 14, cy + fh*0.30);
+      p.stroke();
+
+      // Sombra suave no rosto
+      const shade = p.createRadialGradient(cx, cy, fw*0.2, cx, cy, fw*1.1);
+      shade.addColorStop(0, 'rgba(0,0,0,0)'); shade.addColorStop(1, 'rgba(0,0,0,0.35)');
+      p.fillStyle = shade; p.fillRect(0, 0, w, h);
+    }
+
+    function fitCanvas() {
+      const wrap = canvas.parentElement;
+      const r = wrap.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width  = r.width  * dpr;
+      canvas.height = r.height * dpr;
+      canvas.style.width  = r.width + 'px';
+      canvas.style.height = r.height + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      paintPhoto(r.width, r.height);
+      redraw();
+    }
+
+    function drawStroke(s, target = ctx) {
+      if (!s.points || s.points.length < 1) return;
+      target.lineCap = 'round'; target.lineJoin = 'round';
+      if (s.tool === 'eraser') {
+        target.globalCompositeOperation = 'destination-out';
+        target.strokeStyle = '#000'; target.globalAlpha = 1;
+      } else {
+        target.globalCompositeOperation = 'source-over';
+        target.strokeStyle = s.color;
+        target.globalAlpha = s.tool === 'marker' ? 0.32 : 1;
+      }
+
+      if (s.tool === 'circle' && s.points.length >= 2) {
+        const a = s.points[0], b = s.points[s.points.length-1];
+        target.lineWidth = s.size;
+        target.beginPath();
+        target.ellipse((a.x+b.x)/2, (a.y+b.y)/2, Math.abs(b.x-a.x)/2, Math.abs(b.y-a.y)/2, 0, 0, Math.PI*2);
+        target.stroke();
+      } else if ((s.tool === 'line' || s.tool === 'arrow') && s.points.length >= 2) {
+        const a = s.points[0], b = s.points[s.points.length-1];
+        target.lineWidth = s.size;
+        target.beginPath();
+        target.moveTo(a.x, a.y); target.lineTo(b.x, b.y); target.stroke();
+        if (s.tool === 'arrow') {
+          const ang = Math.atan2(b.y-a.y, b.x-a.x), head = 14 + s.size;
+          target.beginPath();
+          target.moveTo(b.x, b.y); target.lineTo(b.x - head*Math.cos(ang - Math.PI/6), b.y - head*Math.sin(ang - Math.PI/6));
+          target.moveTo(b.x, b.y); target.lineTo(b.x - head*Math.cos(ang + Math.PI/6), b.y - head*Math.sin(ang + Math.PI/6));
+          target.stroke();
+        }
+      } else {
+        // pen / marker / eraser livre
+        for (let i = 1; i < s.points.length; i++) {
+          const p0 = s.points[i-1], p1 = s.points[i];
+          const pr = s.tool === 'eraser' ? 1 : ((p0.p + p1.p) / 2 || 0.5);
+          target.lineWidth = s.size * (pr * 1.6 + 0.25);
+          target.beginPath();
+          target.moveTo(p0.x, p0.y); target.lineTo(p1.x, p1.y); target.stroke();
+        }
+      }
+      target.globalAlpha = 1;
+      target.globalCompositeOperation = 'source-over';
+    }
+
+    function redraw() {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(photo, 0, 0, w, h);
+      strokes.forEach(s => drawStroke(s));
+      if (current) drawStroke(current);
+    }
+
+    function localPoint(e) {
+      const r = canvas.getBoundingClientRect();
+      return {
+        x: e.clientX - r.left,
+        y: e.clientY - r.top,
+        p: e.pressure || (e.pointerType === 'pen' ? 0.5 : 0.7)
+      };
+    }
+
+    function sizeFor(t) {
+      if (t === 'eraser') return 24;
+      if (t === 'marker') return 14;
+      if (t === 'arrow' || t === 'line' || t === 'circle') return 4;
+      return 4;
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      // palm rejection: se for caneta, ignora touch concorrente
+      if (e.pointerType === 'touch' && drawing) return;
+      canvas.setPointerCapture(e.pointerId);
+      drawing = true;
+      const pt = localPoint(e);
+      current = { tool, color, size: sizeFor(tool), points: [pt] };
+      redoStack = [];
+      updateButtons();
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!drawing || !current) return;
+      const pt = localPoint(e);
+      current.points.push(pt);
+      // shapes: redesenha tudo; pen/marker/eraser: incrementa
+      if (current.tool === 'circle' || current.tool === 'line' || current.tool === 'arrow') {
+        redraw();
+      } else {
+        drawStroke({ ...current, points: current.points.slice(-2) });
+      }
+    });
+
+    function endStroke() {
+      if (!drawing) return;
+      drawing = false;
+      if (current && current.points.length > 0) {
+        // shape com 1 ponto: ignora
+        if ((current.tool === 'circle' || current.tool === 'line' || current.tool === 'arrow') && current.points.length < 2) {
+          current = null; redraw(); updateCount(); return;
+        }
+        strokes.push(current);
+      }
+      current = null;
+      redraw();
+      updateCount();
+      updateButtons();
+    }
+    canvas.addEventListener('pointerup',     endStroke);
+    canvas.addEventListener('pointercancel', endStroke);
+    canvas.addEventListener('pointerleave',  endStroke);
+
+    function updateCount() {
+      countLbl.textContent = strokes.length + ' marcaç' + (strokes.length === 1 ? 'ão' : 'ões');
+    }
+    function updateButtons() {
+      undoBtn.disabled = strokes.length === 0;
+      redoBtn.disabled = redoStack.length === 0;
+    }
+
+    undoBtn.addEventListener('click', () => {
+      if (strokes.length === 0) return;
+      redoStack.push(strokes.pop());
+      redraw(); updateCount(); updateButtons();
+    });
+    redoBtn.addEventListener('click', () => {
+      if (redoStack.length === 0) return;
+      strokes.push(redoStack.pop());
+      redraw(); updateCount(); updateButtons();
+    });
+    clearBtn.addEventListener('click', () => {
+      if (strokes.length === 0) return;
+      if (!confirm('Limpar todas as marcações?')) return;
+      redoStack = []; strokes = [];
+      redraw(); updateCount(); updateButtons();
+    });
+
+    // Tool selection
+    document.querySelectorAll('.toolbar [data-tool]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.toolbar [data-tool]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        tool = btn.dataset.tool;
+      });
+    });
+    // Color selection
+    document.querySelectorAll('.toolbar [data-color]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.toolbar [data-color]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        color = btn.dataset.color;
+      });
+    });
+
+    // Save (download PNG)
+    saveBtn.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'visagismo-anotacao-' + Date.now() + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+
+    // Handedness — inverte ordem do toolbar
+    function setHand(side) {
+      handR.classList.toggle('active', side === 'r');
+      handL.classList.toggle('active', side === 'l');
+      body.style.gridTemplateColumns = side === 'l'
+        ? '220px 1fr 64px'
+        : '64px 1fr 220px';
+      const tb = body.querySelector('.toolbar');
+      const vs = body.querySelector('.versions');
+      if (side === 'l') {
+        body.append(tb); // toolbar à direita
+      } else {
+        body.insertBefore(tb, body.firstChild);
+        body.append(vs);
+      }
+    }
+    handR.addEventListener('click', () => setHand('r'));
+    handL.addEventListener('click', () => setHand('l'));
+
+    // Resize
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+  })();
+
+  // ============================================================
+  // iPad LAYOUT — destaque cruzado entre campo e bloco
+  // ============================================================
+  (function initIPadLayout() {
+    document.querySelectorAll('.ipad-context .block-item').forEach(b => {
+      b.addEventListener('mouseenter', () => {
+        const id = b.dataset.id;
+        document.querySelectorAll('.ipad-main .origem').forEach(o => {
+          if ((o.dataset.origin || '').includes(id)) {
+            o.closest('.fieldcard').style.boxShadow = '0 0 0 2px var(--ai-500), var(--shadow-2)';
+          }
+        });
+      });
+      b.addEventListener('mouseleave', () => {
+        document.querySelectorAll('.ipad-main .fieldcard').forEach(c => c.style.boxShadow = '');
+      });
+    });
+    document.querySelectorAll('.ipad-main .origem').forEach(o => {
+      o.addEventListener('mouseenter', () => {
+        const ids = (o.dataset.origin || '').split(' ');
+        document.querySelectorAll('.ipad-context .block-item').forEach(b => {
+          if (ids.includes(b.dataset.id)) {
+            b.style.background = 'var(--status-suggested-bg)';
+            b.style.borderLeftColor = 'var(--ai-500)';
+          }
+        });
+      });
+      o.addEventListener('mouseleave', () => {
+        document.querySelectorAll('.ipad-context .block-item').forEach(b => {
+          if (!b.classList.contains('linked')) {
+            b.style.background = '';
+            b.style.borderLeftColor = '';
+          }
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

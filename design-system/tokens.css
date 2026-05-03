@@ -1,0 +1,266 @@
+/* ============================================================
+   VISAGISMO — Design Tokens
+   Identidade: barbearia premium + ferramenta consultiva
+   Sensação: editorial, masculino, sóbrio, sem clichê
+   ============================================================ */
+
+:root {
+  /* ---------- NEUTROS QUENTES ---------- */
+  --neutral-50:  #FAFAF7;
+  --neutral-100: #F4F2EC;
+  --neutral-200: #E8E4DA;
+  --neutral-300: #D4CEC0;
+  --neutral-400: #A8A193;
+  --neutral-500: #7A7466;
+  --neutral-600: #565145;
+  --neutral-700: #3A362E;
+  --neutral-800: #25221C;
+  --neutral-900: #17150F;
+  --neutral-950: #0E0D08;
+
+  /* ---------- PRIMÁRIA: Bronze profundo ---------- */
+  --primary-50:  #F8F2E7;
+  --primary-100: #EFE0C5;
+  --primary-200: #DEC18B;
+  --primary-300: #C9A05A;
+  --primary-400: #B0843E;
+  --primary-500: #8E6A30;     /* base */
+  --primary-600: #715326;
+  --primary-700: #553E1D;
+  --primary-800: #3A2A14;
+  --primary-900: #21180B;
+  --primary-950: #110C05;
+
+  /* ---------- ACENTO IA: Índigo dessaturado ---------- */
+  --ai-50:  #EEF0F8;
+  --ai-100: #D9DEEE;
+  --ai-200: #B4BCDB;
+  --ai-300: #8E96C2;
+  --ai-400: #6E76A6;
+  --ai-500: #535B89;          /* base */
+  --ai-600: #41476C;
+  --ai-700: #2F3450;
+  --ai-800: #1F2236;
+  --ai-900: #11131F;
+
+  /* ---------- SEMÂNTICAS DE STATUS DE CAMPO ---------- */
+  --status-empty-bg:    var(--neutral-100);
+  --status-empty-fg:    var(--neutral-500);
+  --status-empty-ring:  var(--neutral-300);
+
+  --status-suggested-bg:   #EEF0F8;
+  --status-suggested-fg:   #41476C;
+  --status-suggested-ring: #B4BCDB;
+
+  --status-edited-bg:   #FBEFD8;
+  --status-edited-fg:   #7A5314;
+  --status-edited-ring: #E5BF6E;
+
+  --status-approved-bg:   #E6EFE2;
+  --status-approved-fg:   #2F5A28;
+  --status-approved-ring: #A6C99A;
+
+  --status-conflict-bg:   #F4DDD3;
+  --status-conflict-fg:   #7A2E14;
+  --status-conflict-ring: #D89579;
+
+  /* ---------- FEEDBACK GERAL ---------- */
+  --success: #4F8C3F;
+  --warning: #B8862A;
+  --danger:  #A03A1B;
+  --info:    var(--ai-500);
+
+  /* ---------- SUPERFÍCIES ---------- */
+  --surface-page:    var(--neutral-50);
+  --surface-card:    #FFFFFF;
+  --surface-raised:  #FFFFFF;
+  --surface-sunken:  var(--neutral-100);
+  --surface-overlay: rgba(23, 21, 15, 0.55);
+
+  --border-subtle: var(--neutral-200);
+  --border-strong: var(--neutral-300);
+  --border-focus:  var(--primary-500);
+
+  --text-primary:   var(--neutral-900);
+  --text-secondary: var(--neutral-600);
+  --text-muted:     var(--neutral-500);
+  --text-on-primary: var(--neutral-50);
+  --text-on-ai:      #FFFFFF;
+
+  /* ---------- TIPOGRAFIA ---------- */
+  --font-display: "Fraunces", "Newsreader", Georgia, serif;
+  --font-sans:    "Inter", "Söhne", system-ui, -apple-system, sans-serif;
+  --font-mono:    "JetBrains Mono", "SF Mono", Menlo, monospace;
+
+  --fs-display: 3.5rem;     /* 56 */
+  --fs-h1:      2.5rem;     /* 40 */
+  --fs-h2:      2rem;       /* 32 */
+  --fs-h3:      1.5rem;     /* 24 */
+  --fs-h4:      1.25rem;    /* 20 */
+  --fs-body-lg: 1.125rem;   /* 18 */
+  --fs-body:    1rem;       /* 16 */
+  --fs-body-sm: 0.875rem;   /* 14 */
+  --fs-caption: 0.75rem;    /* 12 */
+  --fs-mono:    0.8125rem;  /* 13 */
+
+  --lh-tight:   1.15;
+  --lh-snug:    1.3;
+  --lh-normal:  1.5;
+  --lh-relaxed: 1.65;
+
+  --tracking-tight:  -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;
+  --tracking-caps:   0.08em;
+
+  /* ---------- ESPAÇAMENTO (base 4px) ---------- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  24px;
+  --space-6:  32px;
+  --space-7:  48px;
+  --space-8:  64px;
+  --space-9:  96px;
+
+  /* ---------- RAIO ---------- */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
+  --radius-2xl:  28px;
+  --radius-full: 9999px;
+
+  /* ---------- ELEVAÇÃO (sombras suaves em camadas) ---------- */
+  --shadow-1: 0 1px 2px rgba(23, 21, 15, 0.04), 0 1px 1px rgba(23, 21, 15, 0.03);
+  --shadow-2: 0 2px 6px rgba(23, 21, 15, 0.06), 0 1px 2px rgba(23, 21, 15, 0.04);
+  --shadow-3: 0 8px 24px rgba(23, 21, 15, 0.08), 0 2px 6px rgba(23, 21, 15, 0.05);
+  --shadow-4: 0 24px 48px rgba(23, 21, 15, 0.12), 0 8px 16px rgba(23, 21, 15, 0.06);
+  --shadow-focus: 0 0 0 3px rgba(142, 106, 48, 0.25);
+  --shadow-focus-ai: 0 0 0 3px rgba(83, 91, 137, 0.30);
+
+  /* ---------- MOVIMENTO ---------- */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast:    120ms;
+  --dur-base:    200ms;
+  --dur-slow:    320ms;
+
+  /* ---------- TOQUE (iPad-first) ---------- */
+  --touch-min: 44px;
+
+  /* ---------- Z-INDEX ---------- */
+  --z-base:    1;
+  --z-raised:  10;
+  --z-overlay: 100;
+  --z-modal:   1000;
+  --z-toast:   2000;
+}
+
+/* ============================================================
+   DARK MODE
+   Para uso noturno em iPad durante atendimento.
+   ============================================================ */
+[data-theme="dark"] {
+  --surface-page:    #14120D;
+  --surface-card:    #1C1A14;
+  --surface-raised:  #25221B;
+  --surface-sunken:  #100E09;
+  --surface-overlay: rgba(0, 0, 0, 0.7);
+
+  --border-subtle: #2C2920;
+  --border-strong: #3D3929;
+  --border-focus:  var(--primary-300);
+
+  --text-primary:   #F4F2EC;
+  --text-secondary: #C7C0AE;
+  --text-muted:     #908975;
+
+  --status-empty-bg:    #1F1D17;
+  --status-empty-fg:    #908975;
+  --status-empty-ring:  #3D3929;
+
+  --status-suggested-bg:   #1F2236;
+  --status-suggested-fg:   #B4BCDB;
+  --status-suggested-ring: #41476C;
+
+  --status-edited-bg:   #2E2310;
+  --status-edited-fg:   #E5BF6E;
+  --status-edited-ring: #7A5314;
+
+  --status-approved-bg:   #1A2A17;
+  --status-approved-fg:   #A6C99A;
+  --status-approved-ring: #2F5A28;
+
+  --status-conflict-bg:   #2E1812;
+  --status-conflict-fg:   #D89579;
+  --status-conflict-ring: #7A2E14;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --shadow-4: 0 24px 48px rgba(0, 0, 0, 0.7);
+}
+
+/* ============================================================
+   BASE / RESET
+   ============================================================ */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--surface-page);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--lh-tight);
+  margin: 0;
+}
+
+h1 { font-size: var(--fs-h1); }
+h2 { font-size: var(--fs-h2); }
+h3 { font-size: var(--fs-h3); }
+h4 { font-size: var(--fs-h4); }
+
+p { margin: 0; }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
