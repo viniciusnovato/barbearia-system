@@ -73,16 +73,21 @@ export function DossierEditor({ dossier, client, activeSection, fields, blocks, 
           {DOSSIER_SECTIONS.map((s) => {
             const p = progress.find((x) => x.id === s.id)!;
             const active = section === s.id;
+            const allFilled = p.total > 0 && p.filled === p.total;
             const allReady = p.total > 0 && p.ready === p.total;
-            const someReady = p.total > 0 && p.ready > 0;
+            // Cor:
+            //   verde     → todos preenchidos E todos prontos (editado/aprovado)
+            //   índigo IA → todos preenchidos mas há sugestões pendentes da IA pra revisar
+            //   neutro    → parcial
+            //   muted     → vazio
             const countColor = active
               ? "text-neutral-100"
               : allReady
               ? "text-success"
-              : someReady
-              ? "text-text-secondary"
-              : p.filled > 0
+              : allFilled
               ? "text-ai-600"
+              : p.filled > 0
+              ? "text-text-secondary"
               : "text-text-muted";
             return (
               <button
@@ -95,8 +100,11 @@ export function DossierEditor({ dossier, client, activeSection, fields, blocks, 
               >
                 <span className="truncate">{s.title}</span>
                 {p.total > 0 ? (
-                  <span className={`font-mono text-caption ${countColor}`} title={`${p.ready} prontos · ${p.filled} preenchidos · ${p.total} total`}>
-                    {p.ready}/{p.total}
+                  <span
+                    className={`font-mono text-caption ${countColor}`}
+                    title={`${p.filled} preenchidos · ${p.ready} prontos · ${p.total} total`}
+                  >
+                    {p.filled}/{p.total}
                     {allReady && " ✓"}
                   </span>
                 ) : (

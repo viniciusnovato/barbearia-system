@@ -152,10 +152,21 @@ Deno.serve(async (req) => {
       .update({ processed_at: new Date().toISOString(), transcript_full: result.transcript_full, error: null })
       .eq("id", audio_id);
 
-    // Dispara classificação dos campos (não-bloqueante)
-    classifyDossierFields(admin, audio.dossier_id, ctx.userId).catch((e) => console.error("classify", e));
+    // Classificação SÍNCRONA: aguarda terminar antes de devolver, pra que
+    // a UI já encontre os campos preenchidos quando renderizar o dossiê.
+    let classifiedCount = 0;
+    try {
+      classifiedCount = await classifyDossierFields(admin, audio.dossier_id, ctx.userId);
+    } catch (e) {
+      console.error("classify error:", e);
+      // Não falha a request — blocos já estão salvos.
+    }
 
-    return jsonRes({ ok: true, blocks_count: blocksRows.length });
+    return jsonRes({
+      ok: true,
+      blocks_count: blocksRows.length,
+      fields_classified: classifiedCount,
+    });
   } catch (e) {
     if (e instanceof Response) return e;
     return jsonRes({ error: e instanceof Error ? e.message : String(e) }, 500);
@@ -200,14 +211,14 @@ async function classifyDossierFields(
   admin: ReturnType<typeof createClient>,
   dossier_id: string,
   _userId: string,
-) {
+): Promise<number> {
   const { data: blocks } = await admin
     .from("transcript_blocks")
     .select("id, ord, speaker, text, intent, target_field_key, is_noise")
     .eq("dossier_id", dossier_id)
     .eq("is_noise", false)
     .order("ord");
-  if (!blocks || blocks.length === 0) return;
+  if (!blocks || blocks.length === 0) return 0;
 
   const ordToId = new Map<number, string>();
   for (const b of blocks) ordToId.set(b.ord, b.id);
@@ -227,12 +238,13 @@ Devolva o JSON conforme o schema. Inclua apenas campos com evidência.`;
       maxOutputTokens: 4096,
     });
     result = r.json as { fields: { field_key: string; value: string; source_block_ords: number[] }[] };
-    if (!result || !Array.isArray(result.fields)) return;
+    if (!result || !Array.isArray(result.fields)) return 0;
   } catch (e) {
     console.error("classify gemini", e);
-    return;
+    return 0;
   }
 
+  let updated = 0;
   for (const f of result.fields) {
     const blockIds = (f.source_block_ords ?? []).map((o) => ordToId.get(o)).filter(Boolean) as string[];
     // Só sobrescreve se o campo está em "vazio" — não sobrepõe edições do barbeiro
@@ -245,7 +257,7 @@ Devolva o JSON conforme o schema. Inclua apenas campos com evidência.`;
     if (existing && existing.status !== "vazio" && existing.status !== "sugerido") continue;
 
     const isConflict = f.value.toLowerCase().startsWith("contradição");
-    await admin
+    const { error: upErr } = await admin
       .from("dossier_fields")
       .update({
         value: f.value,
@@ -254,6 +266,7 @@ Devolva o JSON conforme o schema. Inclua apenas campos com evidência.`;
       })
       .eq("dossier_id", dossier_id)
       .eq("field_key", f.field_key);
+    if (!upErr) updated += 1;
   }
 
   await admin
@@ -261,6 +274,8 @@ Devolva o JSON conforme o schema. Inclua apenas campos com evidência.`;
     .update({ status: "em_revisao" })
     .eq("id", dossier_id)
     .eq("status", "rascunho");
+
+  return updated;
 }
 
 function bytesToBase64(bytes: Uint8Array): string {
