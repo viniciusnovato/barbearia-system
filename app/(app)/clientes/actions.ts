@@ -85,12 +85,13 @@ export async function updateClientAction(formData: FormData) {
   redirect(`/clientes/${id}`);
 }
 
-export async function deleteClientAction(formData: FormData) {
+// Direto em <form action={...}> → Promise<void>
+export async function deleteClientAction(formData: FormData): Promise<void> {
   const supabase = await createServerSupabase();
   const id = String(formData.get("id") ?? "");
-  if (!id) return { error: "Id ausente" };
+  if (!id) return;
   const { error } = await supabase.from("clients").delete().eq("id", id);
-  if (error) return { error: error.message };
+  if (error) return;
   revalidatePath("/clientes");
   redirect("/clientes");
 }

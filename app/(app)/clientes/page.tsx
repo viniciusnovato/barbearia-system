@@ -87,7 +87,7 @@ export default async function ClientsPage({ searchParams }: PageProps) {
       ) : (
         <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {enriched.map((c) => {
-            const initials = c.full_name.split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
+            const initials = c.full_name.split(" ").map((s: string) => s[0]).slice(0, 2).join("").toUpperCase();
             return (
               <li key={c.id}>
                 <Link
