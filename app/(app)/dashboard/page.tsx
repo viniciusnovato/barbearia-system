@@ -5,7 +5,8 @@ import { StatsRow } from "./_components/StatsRow";
 import { ReengagementList } from "./_components/ReengagementList";
 import { AnniversaryList } from "./_components/AnniversaryList";
 import { UpcomingReturns } from "./_components/UpcomingReturns";
-import { PeriodPicker, getPeriodRange } from "./_components/PeriodPicker";
+import { PeriodPicker } from "./_components/PeriodPicker";
+import { getPeriodRange } from "./_components/period";
 
 export const dynamic = "force-dynamic";
 
