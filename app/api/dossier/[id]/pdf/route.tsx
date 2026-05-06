@@ -49,7 +49,7 @@ export async function GET(req: Request, ctx: RouteContext) {
   const [{ data: fields }, { data: assets }, { data: barberRow }] = await Promise.all([
     supabase.from("dossier_fields").select("section, field_key, value, status").eq("dossier_id", id),
     supabase.from("media_assets").select("id, kind, storage_path, bucket, caption").eq("dossier_id", id).eq("included_in_pdf", true).order("created_at"),
-    supabase.from("barbers").select("full_name, instagram").eq("id", user?.id ?? "").maybeSingle(),
+    supabase.from("barbers").select("full_name, instagram, logo_path").eq("id", user?.id ?? "").maybeSingle(),
   ]);
 
   // Use admin para baixar mídia (PDF roda server-side, evitar problema com signed URLs)
@@ -65,6 +65,7 @@ export async function GET(req: Request, ctx: RouteContext) {
   }
 
   const clientPhotoData = client?.photo_url ? await fetchImage("client-photos", client.photo_url) : null;
+  const logoData = barberRow?.logo_path ? await fetchImage("barber-assets", barberRow.logo_path) : null;
   const assetData = await Promise.all(
     (assets ?? []).map(async (a) => ({
       ...a,
@@ -87,6 +88,7 @@ export async function GET(req: Request, ctx: RouteContext) {
       fieldByKey={fieldByKey}
       assets={assetData}
       isPreview={isPreview}
+      logoData={logoData}
     />,
   ).toBlob();
 
@@ -149,9 +151,10 @@ interface DossierDocProps {
   fieldByKey: Map<string, { value: string | null; status: string }>;
   assets: { kind: string; dataUrl: string | null; caption: string | null }[];
   isPreview: boolean;
+  logoData: string | null;
 }
 
-function DossierDoc({ title, scheduled, clientName, clientInstagram, clientPhotoData, barberName, barberInstagram, sections, fieldByKey, assets, isPreview }: DossierDocProps) {
+function DossierDoc({ title, scheduled, clientName, clientInstagram, clientPhotoData, barberName, barberInstagram, sections, fieldByKey, assets, isPreview, logoData }: DossierDocProps) {
   const date = new Date(scheduled).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
   const photos = assets.filter((a) => a.kind === "foto_cliente" && a.dataUrl);
   const annotations = assets.filter((a) => a.kind === "marcacao_ipad" && a.dataUrl);
@@ -162,6 +165,11 @@ function DossierDoc({ title, scheduled, clientName, clientInstagram, clientPhoto
       {/* Cover */}
       <Page size="A4" style={styles.cover}>
         <View>
+          {logoData && (
+            <View style={{ marginBottom: 32, width: 120, height: 60 }}>
+              <Image src={logoData} style={{ maxWidth: "100%", maxHeight: "100%" }} />
+            </View>
+          )}
           <Text style={styles.coverEyebrow}>Visagismo · Dossiê{isPreview ? " · Rascunho" : ""}</Text>
           <Text style={styles.coverTitle}>{title}</Text>
           <Text style={styles.coverSub}>Cliente · {clientName}</Text>

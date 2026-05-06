@@ -3,15 +3,23 @@ import Link from "next/link";
 import { Toaster } from "sonner";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { signOutAction } from "../login/actions";
+import { CommandMenu } from "./_components/CommandMenu";
+import { OnboardingTour } from "./_components/OnboardingTour";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const { data: barber } = await supabase
+    .from("barbers")
+    .select("full_name, tour_completed_at")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const meta = (user.user_metadata ?? {}) as { full_name?: string };
-  const displayName = meta.full_name ?? user.email?.split("@")[0] ?? "Barbeiro";
-  const initials = displayName.split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
+  const displayName = barber?.full_name ?? meta.full_name ?? user.email?.split("@")[0] ?? "Barbeiro";
+  const initials = displayName.split(" ").map((s: string) => s[0]).slice(0, 2).join("").toUpperCase();
 
   return (
     <div className="min-h-screen bg-surface-page">
@@ -25,10 +33,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <NavLink href="/dashboard">Painel</NavLink>
             <NavLink href="/clientes">Clientes</NavLink>
             <NavLink href="/produtos">Produtos</NavLink>
+            <NavLink href="/configuracoes">Configurações</NavLink>
           </nav>
         </div>
         <div className="flex items-center gap-3">
-          <div className="hidden md:flex flex-col items-end">
+          <CommandMenu />
+          <div className="hidden lg:flex flex-col items-end">
             <span className="text-body-sm font-medium">{displayName}</span>
             <span className="text-caption text-text-muted">{user.email}</span>
           </div>
@@ -39,6 +49,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
       {children}
+      <OnboardingTour completed={!!barber?.tour_completed_at} />
       <Toaster
         position="bottom-right"
         toastOptions={{
