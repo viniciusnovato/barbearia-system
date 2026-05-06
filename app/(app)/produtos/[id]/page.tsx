@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getSignedUrl } from "@/lib/storage";
 import { ProductForm } from "../_components/ProductForm";
-import { deleteProductAction, updateProductAction } from "../actions";
+import { updateProductAction } from "../actions";
+import { DeleteProductButton } from "../_components/DeleteProductButton";
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -43,16 +44,7 @@ export default async function EditProductPage({ params }: PageProps) {
       />
 
       <hr className="my-10 border-border-subtle" />
-      <form action={deleteProductAction} className="rounded-lg border border-status-conflict-ring p-5 bg-status-conflict-bg/40">
-        <input type="hidden" name="id" value={id} />
-        <p className="font-display text-h4 text-status-conflict-fg">Apagar produto</p>
-        <p className="text-body-sm mt-1 text-text-secondary">
-          Remove o produto do catálogo. Histórico nos dossiês fica preservado.
-        </p>
-        <button type="submit" className="mt-4 h-9 px-4 rounded-md bg-danger text-neutral-50 text-body-sm font-medium hover:brightness-110 transition-all">
-          Apagar
-        </button>
-      </form>
+      <DeleteProductButton id={id} name={product.name} />
     </main>
   );
 }

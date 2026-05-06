@@ -40,10 +40,11 @@ export default async function DossierPage({ params, searchParams }: PageProps) {
       .select("id, product_id, purchased, barber_products(id, name, description, photo_path, price_brl)")
       .eq("dossier_id", id),
     supabase.from("media_assets")
-      .select("id, kind, storage_path, bucket, caption")
+      .select("id, kind, storage_path, bucket, caption, sort_order")
       .eq("dossier_id", id)
       .in("kind", ["referencia_corte", "referencia_barba"])
-      .order("created_at"),
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
   ]);
 
   const [{ data: pdfHistory }, { data: dossierTemplates }] = await Promise.all([

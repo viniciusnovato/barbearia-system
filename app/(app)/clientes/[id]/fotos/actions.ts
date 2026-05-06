@@ -39,6 +39,27 @@ export async function addClientPhotoAction(formData: FormData): Promise<void> {
   revalidatePath(`/clientes/${client_id}/fotos`);
 }
 
+export async function reorderClientPhotosAction(
+  client_id: string,
+  orderedIds: string[],
+): Promise<void> {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !client_id) return;
+
+  await Promise.all(
+    orderedIds.map((id, idx) =>
+      supabase
+        .from("client_photos")
+        .update({ sort_order: idx })
+        .eq("id", id)
+        .eq("client_id", client_id),
+    ),
+  );
+  revalidatePath(`/clientes/${client_id}/fotos`);
+  revalidatePath(`/clientes/${client_id}`);
+}
+
 export async function deleteClientPhotoAction(formData: FormData): Promise<void> {
   const supabase = await createServerSupabase();
   const id = String(formData.get("id") ?? "");

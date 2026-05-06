@@ -1,11 +1,11 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getSignedUrl } from "@/lib/storage";
 import { ANGLES } from "./_const";
-import { addClientPhotoAction, deleteClientPhotoAction } from "./actions";
+import { addClientPhotoAction } from "./actions";
 import { PhotoUploader } from "./_components/PhotoUploader";
+import { SortablePhotoGrid } from "./_components/SortablePhotoGrid";
 
 export const dynamic = "force-dynamic";
 
@@ -78,39 +78,11 @@ export default async function ClientPhotosPage({ params }: PageProps) {
                 </p>
                 <span className="font-mono text-caption text-text-muted">{list.length} foto{list.length === 1 ? "" : "s"}</span>
               </header>
-              {list.length === 0 ? (
-                <div className="rounded-md border border-dashed border-border-subtle p-6 text-center text-body-sm text-text-muted">
-                  Nenhuma foto deste ângulo ainda.
-                </div>
-              ) : (
-                <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {list.map((p) => (
-                    <li key={p.id} className="group relative rounded-lg overflow-hidden bg-neutral-200 aspect-[4/3]">
-                      {p.url ? (
-                        <Image src={p.url} alt={p.caption ?? angleDef.label} fill unoptimized className="object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-text-muted text-caption">indisponível</div>
-                      )}
-                      <form action={deleteClientPhotoAction} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <input type="hidden" name="id" value={p.id} />
-                        <input type="hidden" name="client_id" value={id} />
-                        <button
-                          type="submit"
-                          title="Remover"
-                          className="size-9 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-danger transition-colors backdrop-blur"
-                        >
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></svg>
-                        </button>
-                      </form>
-                      {p.caption && (
-                        <p className="absolute bottom-0 inset-x-0 px-3 py-2 text-caption text-white bg-gradient-to-t from-black/70 to-transparent">
-                          {p.caption}
-                        </p>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <SortablePhotoGrid
+                clientId={id}
+                angleLabel={angleDef.label}
+                initial={list.map((p) => ({ id: p.id, url: p.url, caption: p.caption }))}
+              />
             </section>
           );
         })}

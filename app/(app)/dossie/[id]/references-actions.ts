@@ -39,6 +39,23 @@ export async function uploadReferenceAction(formData: FormData): Promise<void> {
   revalidatePath(`/dossie/${dossier_id}`);
 }
 
+export async function reorderReferencesAction(
+  dossier_id: string,
+  kind: string,
+  orderedIds: string[],
+): Promise<void> {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !dossier_id || !["referencia_corte", "referencia_barba"].includes(kind)) return;
+
+  await Promise.all(
+    orderedIds.map((id, idx) =>
+      supabase.from("media_assets").update({ sort_order: idx }).eq("id", id).eq("dossier_id", dossier_id),
+    ),
+  );
+  revalidatePath(`/dossie/${dossier_id}`);
+}
+
 export async function deleteReferenceAction(formData: FormData): Promise<void> {
   const supabase = await createServerSupabase();
   const id = String(formData.get("id") ?? "");

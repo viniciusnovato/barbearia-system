@@ -62,6 +62,7 @@ export function ProductsSection({ dossierId, catalog, dossierProducts, isFinaliz
   }
 
   function remove(rowId: string) {
+    if (!confirm("Remover este produto do dossiê?")) return;
     startTransition(async () => {
       const fd = new FormData();
       fd.set("id", rowId);

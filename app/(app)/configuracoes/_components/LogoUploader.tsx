@@ -45,6 +45,7 @@ export function LogoUploader({ currentLogoUrl, action, removeAction }: Props) {
             type="button"
             disabled={pending}
             onClick={() => {
+              if (!confirm("Remover sua logo?")) return;
               setPreview(null);
               startTransition(async () => {
                 await removeAction();
