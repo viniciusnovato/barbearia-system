@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { DOSSIER_SECTIONS, REQUIRED_FIELDS, isFieldReady } from "@/lib/dossier/schema";
 import { getSignedUrl } from "@/lib/storage";
 import { DossierEditor } from "./_components/DossierEditor";
+import { AcompanhamentoEditor } from "./_components/AcompanhamentoEditor";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -116,6 +116,24 @@ export default async function DossierPage({ params, searchParams }: PageProps) {
 
   // Validação obrigatórios — usa o helper centralizado
   const missingRequired = REQUIRED_FIELDS.filter((k) => !isFieldReady(fields?.find((x) => x.field_key === k)));
+
+  if (dossier.mode === "acompanhamento") {
+    return (
+      <AcompanhamentoEditor
+        dossier={{
+          id: dossier.id,
+          title: dossier.title,
+          status: dossier.status,
+          scheduled_date: dossier.scheduled_date,
+          summary_done: dossier.summary_done ?? null,
+        }}
+        client={{ id: client.id, full_name: client.full_name, phone: client.phone ?? null }}
+        fields={(fields ?? []).map((f) => ({ id: f.id, field_key: f.field_key, value: f.value, status: f.status }))}
+        catalog={catalogEnriched}
+        dossierProducts={dossierProducts}
+      />
+    );
+  }
 
   return (
     <DossierEditor

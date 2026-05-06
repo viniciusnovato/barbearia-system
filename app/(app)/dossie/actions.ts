@@ -14,16 +14,31 @@ export async function createDossierAction(formData: FormData): Promise<void> {
   const client_id = String(formData.get("client_id") ?? "");
   if (!client_id) return;
 
+  const rawMode = String(formData.get("mode") ?? "entrevista");
+  const mode: "entrevista" | "acompanhamento" =
+    rawMode === "acompanhamento" ? "acompanhamento" : "entrevista";
+
   const today = new Date();
-  const titleBase = `Atendimento · ${today.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" })}`;
+  const dateLabel = today.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" });
+  const titleBase =
+    mode === "acompanhamento"
+      ? `Acompanhamento · ${dateLabel}`
+      : `Atendimento · ${dateLabel}`;
 
   const { data: dossier, error } = await supabase
     .from("dossiers")
-    .insert({ client_id, title: titleBase, scheduled_date: today.toISOString().slice(0, 10) })
+    .insert({
+      client_id,
+      title: titleBase,
+      scheduled_date: today.toISOString().slice(0, 10),
+      mode,
+    })
     .select("id")
     .single();
   if (error || !dossier) return;
 
+  // Mesmo no acompanhamento seedamos os campos (o usuário pode promover depois).
+  // Mas a UI do acompanhamento só vai renderizar um subset.
   const rows = ALL_FIELDS.map((f) => ({
     dossier_id: dossier.id,
     section: f.section,
@@ -38,6 +53,15 @@ export async function createDossierAction(formData: FormData): Promise<void> {
 
   revalidatePath(`/clientes/${client_id}`);
   redirect(`/dossie/${dossier.id}`);
+}
+
+export async function updateDossierSummaryAction(formData: FormData): Promise<void> {
+  const supabase = await createServerSupabase();
+  const dossier_id = String(formData.get("dossier_id") ?? "");
+  const summary_done = String(formData.get("summary_done") ?? "").trim() || null;
+  if (!dossier_id) return;
+  await supabase.from("dossiers").update({ summary_done }).eq("id", dossier_id);
+  revalidatePath(`/dossie/${dossier_id}`);
 }
 
 export async function updateFieldAction(formData: FormData): Promise<void> {
@@ -230,16 +254,25 @@ export async function finalizeDossierAction(formData: FormData): Promise<void> {
   const dossier_id = String(formData.get("dossier_id") ?? "");
   if (!dossier_id) return;
 
-  const { data: fields } = await supabase
-    .from("dossier_fields")
-    .select("field_key, status, value")
-    .eq("dossier_id", dossier_id);
+  const { data: dossier } = await supabase
+    .from("dossiers")
+    .select("mode")
+    .eq("id", dossier_id)
+    .maybeSingle();
 
-  const missing = REQUIRED_FIELDS.filter((k) => !isFieldReady(fields?.find((x) => x.field_key === k)));
+  // Acompanhamento não exige campos obrigatórios prontos.
+  if ((dossier?.mode ?? "entrevista") !== "acompanhamento") {
+    const { data: fields } = await supabase
+      .from("dossier_fields")
+      .select("field_key, status, value")
+      .eq("dossier_id", dossier_id);
 
-  if (missing.length > 0) {
-    // Validação client-side já mostra a contagem; rejeição silenciosa aqui.
-    return;
+    const missing = REQUIRED_FIELDS.filter((k) => !isFieldReady(fields?.find((x) => x.field_key === k)));
+
+    if (missing.length > 0) {
+      // Validação client-side já mostra a contagem; rejeição silenciosa aqui.
+      return;
+    }
   }
 
   await supabase

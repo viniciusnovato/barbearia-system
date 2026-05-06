@@ -3,9 +3,9 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getSignedUrl } from "@/lib/storage";
-import { createDossierAction } from "../../dossie/actions";
 import { NextReturnCard } from "./_components/NextReturnCard";
 import { ClientTagPicker } from "./_components/ClientTagPicker";
+import { NewDossierMenu } from "./_components/NewDossierMenu";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +26,7 @@ export default async function ClientProfilePage({ params }: PageProps) {
 
   const { data: dossiers } = await supabase
     .from("dossiers")
-    .select("id, title, scheduled_date, status, finalized_at, summary_done")
+    .select("id, title, scheduled_date, status, finalized_at, summary_done, mode")
     .eq("client_id", id)
     .order("scheduled_date", { ascending: false });
 
@@ -138,12 +138,7 @@ export default async function ClientProfilePage({ params }: PageProps) {
           <Link href={`/clientes/${id}/fotos`} className="h-touch px-4 inline-flex items-center gap-2 rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors">
             📷 Galeria
           </Link>
-          <form action={createDossierAction}>
-            <input type="hidden" name="client_id" value={id} />
-            <button type="submit" className="h-touch px-5 inline-flex items-center gap-2 rounded-md bg-primary-500 text-neutral-50 font-medium shadow-1 hover:bg-primary-600 transition-all">
-              + Novo dossiê
-            </button>
-          </form>
+          <NewDossierMenu clientId={id} />
         </div>
       </header>
 
@@ -248,7 +243,14 @@ export default async function ClientProfilePage({ params }: PageProps) {
                         {new Date(d.scheduled_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
                       </p>
                     </div>
-                    <DossierStatusBadge status={d.status} />
+                    <div className="flex items-center gap-2 shrink-0">
+                      {d.mode === "acompanhamento" && (
+                        <span className="text-caption uppercase font-medium px-2.5 h-6 inline-flex items-center rounded-full bg-status-edited-bg text-status-edited-fg ring-1 ring-inset ring-status-edited-ring" style={{ letterSpacing: "0.06em" }}>
+                          Acompanhamento
+                        </span>
+                      )}
+                      <DossierStatusBadge status={d.status} />
+                    </div>
                   </div>
 
                   {(d.beforeUrl || d.afterUrl) && (
