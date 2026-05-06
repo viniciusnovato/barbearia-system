@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createBrowserSupabase } from "@/lib/supabase/client";
+import { BeforeAfter } from "./BeforeAfter";
 
 type Tool = "pen" | "marker" | "eraser" | "arrow" | "circle" | "line";
 interface Stroke { tool: Tool; color: string; size: number; points: { x: number; y: number; p: number }[] }
@@ -48,6 +50,11 @@ export function Annotator({ assetId, dossierId, imageUrl, versions }: Props) {
   const [versionName, setVersionName] = useState("Análise inicial");
   const [saving, setSaving] = useState(false);
   const [hand, setHand] = useState<"r" | "l">("r");
+
+  // F8 — Geração de imagem "depois"
+  const [generating, setGenerating] = useState(false);
+  const [afterUrl, setAfterUrl] = useState<string | null>(null);
+  const [showCompare, setShowCompare] = useState(false);
 
   useEffect(() => {
     const img = new Image();
@@ -311,6 +318,37 @@ export function Annotator({ assetId, dossierId, imageUrl, versions }: Props) {
     redraw();
   }
 
+  async function generateAfter() {
+    setGenerating(true);
+    const t = toast.loading("Gerando imagem do depois com IA…", { description: "Isso leva 15-30 segundos." });
+    try {
+      const supabase = createBrowserSupabase();
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/generate-after-image`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        },
+        body: JSON.stringify({ dossier_id: dossierId, asset_id: assetId }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error("Falha ao gerar imagem", { id: t, description: j.error ?? res.statusText });
+        return;
+      }
+      setAfterUrl(j.signed_url);
+      setShowCompare(true);
+      toast.success("Imagem gerada!", { id: t, description: "Já está no dossiê e vai entrar no PDF." });
+      router.refresh();
+    } catch (e) {
+      toast.error("Erro inesperado", { id: t, description: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   async function save() {
     setSaving(true);
     try {
@@ -371,11 +409,28 @@ export function Annotator({ assetId, dossierId, imageUrl, versions }: Props) {
             <button onClick={() => setHand("r")} className={`px-3 h-7 rounded-full ${hand === "r" ? "bg-surface-card shadow-1" : "text-text-muted"}`}>Destra</button>
             <button onClick={() => setHand("l")} className={`px-3 h-7 rounded-full ${hand === "l" ? "bg-surface-card shadow-1" : "text-text-muted"}`}>Canhota</button>
           </span>
+          <button
+            onClick={generateAfter}
+            disabled={generating}
+            className="relative h-9 px-4 rounded-md bg-ai-500 text-white font-medium text-body-sm hover:bg-ai-600 disabled:opacity-50 transition-all overflow-hidden inline-flex items-center gap-1.5"
+            title="Gerar imagem do depois com IA"
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden><path d="M12 2.5l1.8 5.7 5.7 1.8-5.7 1.8L12 17.5l-1.8-5.7-5.7-1.8 5.7-1.8L12 2.5z"/></svg>
+            {generating ? "Gerando…" : "Gerar imagem do depois"}
+          </button>
           <button onClick={save} disabled={saving} className="h-9 px-4 rounded-md bg-primary-500 text-neutral-50 font-medium text-body-sm hover:bg-primary-600 disabled:opacity-50 transition-all">
             {saving ? "Salvando…" : "Salvar versão"}
           </button>
         </div>
       </header>
+
+      {showCompare && afterUrl && (
+        <BeforeAfter
+          beforeUrl={imageUrl}
+          afterUrl={afterUrl}
+          onClose={() => setShowCompare(false)}
+        />
+      )}
 
       <div className={`grid gap-3 p-3 ${hand === "r" ? "grid-cols-[64px_1fr_220px]" : "grid-cols-[220px_1fr_64px]"}`}>
         {hand === "r" && <Toolbar tool={tool} setTool={setTool} color={color} setColor={setColor} onUndo={undo} onRedo={redo} canUndo={strokesRef.current.length > 0} canRedo={redoStackRef.current.length > 0} />}

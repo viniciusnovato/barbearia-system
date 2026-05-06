@@ -155,6 +155,7 @@ function DossierDoc({ title, scheduled, clientName, clientInstagram, clientPhoto
   const date = new Date(scheduled).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
   const photos = assets.filter((a) => a.kind === "foto_cliente" && a.dataUrl);
   const annotations = assets.filter((a) => a.kind === "marcacao_ipad" && a.dataUrl);
+  const aiImages = assets.filter((a) => a.kind === "expectativa_ia" && a.dataUrl);
 
   return (
     <Document title={title} author={barberName}>
@@ -228,6 +229,29 @@ function DossierDoc({ title, scheduled, clientName, clientInstagram, clientPhoto
           </Page>
         );
       })}
+
+      {/* Página de Projeção (imagens IA) */}
+      {aiImages.length > 0 && (
+        <Page size="A4" style={styles.page}>
+          <View style={styles.pageHead}>
+            <Text style={styles.pageHeadL}>Projeção</Text>
+            <Text style={styles.pageHeadR}>{clientName} · {date}</Text>
+          </View>
+          <Text style={styles.sectionEyebrow}>Como você vai ficar</Text>
+          <Text style={styles.sectionTitle}>Projeção visual</Text>
+          <Text style={styles.sectionSub}>
+            Imagem gerada por IA a partir do direcionamento aprovado. Referência ilustrativa do resultado esperado.
+          </Text>
+          <View style={styles.imgRow}>
+            {aiImages.slice(0, 3).map((a, i) => a.dataUrl && (
+              <View key={`ai-${i}`} style={[styles.imgItem, { width: 460, marginRight: 0 }]} wrap={false}>
+                <Image src={a.dataUrl} />
+                <Text style={styles.imgCaption}>{a.caption ?? "Projeção IA"}</Text>
+              </View>
+            ))}
+          </View>
+        </Page>
+      )}
     </Document>
   );
 }

@@ -23,7 +23,7 @@ export default async function AnnotateIndexPage({ params }: PageProps) {
     .from("media_assets")
     .select("id, kind, storage_path, bucket, caption, created_at, parent_asset_id")
     .eq("dossier_id", id)
-    .eq("kind", "foto_cliente")
+    .in("kind", ["foto_cliente", "expectativa_ia"])
     .is("parent_asset_id", null)
     .order("created_at", { ascending: false });
 
@@ -62,10 +62,10 @@ export default async function AnnotateIndexPage({ params }: PageProps) {
                 )}
                 <div className="p-3">
                   <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.08em" }}>
-                    Foto principal
+                    {a.kind === "expectativa_ia" ? "✨ Imagem IA" : "Foto principal"}
                   </p>
                   <p className="text-body-sm group-hover:text-primary-600 transition-colors">
-                    Desenhar com iPad →
+                    {a.kind === "expectativa_ia" ? "Visualizar →" : "Desenhar com iPad →"}
                   </p>
                 </div>
               </Link>

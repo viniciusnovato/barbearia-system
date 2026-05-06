@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { getDashboardStats, getReengagementList, getAnniversaryList } from "@/lib/dashboard/queries";
+import { StatsRow } from "./_components/StatsRow";
+import { ReengagementList } from "./_components/ReengagementList";
+import { AnniversaryList } from "./_components/AnniversaryList";
+
+export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabase();
@@ -7,102 +13,117 @@ export default async function DashboardPage() {
   const meta = (user?.user_metadata ?? {}) as { full_name?: string };
   const displayName = meta.full_name ?? user?.email?.split("@")[0] ?? "Barbeiro";
 
-  // Stats
-  const [{ count: clientCount }, { count: dossierCount }, { count: finalizedCount }] = await Promise.all([
-    supabase.from("clients").select("*", { count: "exact", head: true }),
-    supabase.from("dossiers").select("*", { count: "exact", head: true }),
-    supabase.from("dossiers").select("*", { count: "exact", head: true }).eq("status", "finalizado"),
+  const [stats, reengagement, anniversaries, latest] = await Promise.all([
+    getDashboardStats(),
+    getReengagementList(30),
+    getAnniversaryList(),
+    supabase
+      .from("dossiers")
+      .select("id, title, scheduled_date, status, clients!inner(id, full_name)")
+      .order("created_at", { ascending: false })
+      .limit(5),
   ]);
 
-  // Latest dossiers
-  const { data: latestDossiers } = await supabase
-    .from("dossiers")
-    .select("id, title, scheduled_date, status, clients!inner(id, full_name)")
-    .order("created_at", { ascending: false })
-    .limit(5);
-
   return (
-    <main className="max-w-6xl mx-auto px-6 lg:px-10 py-12">
-      <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.12em" }}>
-        Painel do barbeiro
-      </p>
-      <h1 className="font-display text-display mt-3 leading-tight">Olá, {displayName.split(" ")[0]}.</h1>
-      <p className="mt-4 text-body-lg text-text-secondary max-w-2xl">
-        Pronto pra começar. Acesse seus clientes, abra um dossiê novo ou continue uma revisão.
-      </p>
+    <main className="max-w-6xl mx-auto px-6 lg:px-10 py-10">
+      <header className="mb-8">
+        <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.12em" }}>
+          Painel · {new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long" })}
+        </p>
+        <h1 className="font-display text-h1 mt-2">Bom dia, {displayName.split(" ")[0]}.</h1>
+        <p className="text-body-secondary mt-2 text-text-secondary">
+          {reengagement.length > 0
+            ? `${reengagement.length} cliente(s) precisam de contato — comece o dia chamando eles.`
+            : "Tudo em dia. Bora atender."}
+        </p>
+      </header>
 
-      {/* Stats */}
-      <div className="grid sm:grid-cols-3 gap-4 mt-10">
-        <Stat label="Clientes" value={clientCount ?? 0} hint="No seu cadastro" />
-        <Stat label="Dossiês" value={dossierCount ?? 0} hint="Total criados" />
-        <Stat label="Finalizados" value={finalizedCount ?? 0} hint="Com PDF gerado" tone="success" />
-      </div>
+      <section className="mb-10">
+        <StatsRow {...stats} />
+      </section>
 
-      {/* CTAs */}
-      <div className="grid md:grid-cols-2 gap-4 mt-6">
-        <Link href="/clientes" className="group rounded-2xl bg-surface-card border border-border-subtle p-6 hover:shadow-2 hover:border-primary-300 transition-all">
+      {/* CTAs principais */}
+      <div className="grid md:grid-cols-2 gap-3 mb-10">
+        <Link href="/clientes" className="group rounded-lg bg-surface-card border border-border-subtle p-5 hover:shadow-2 hover:border-primary-300 transition-all">
           <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.1em" }}>Clientes</p>
-          <h3 className="font-display text-h3 mt-2 group-hover:text-primary-600 transition-colors">Ver lista de clientes →</h3>
-          <p className="text-body-sm text-text-secondary mt-2">Buscar por nome, telefone ou Instagram. Criar novo cliente.</p>
+          <h3 className="font-display text-h4 mt-2 group-hover:text-primary-600 transition-colors">Ver lista completa →</h3>
         </Link>
-        <Link href="/clientes/novo" className="group rounded-2xl bg-primary-500 text-neutral-50 p-6 hover:bg-primary-600 transition-colors">
+        <Link href="/clientes/novo" className="group rounded-lg bg-primary-500 text-neutral-50 p-5 hover:bg-primary-600 transition-colors">
           <p className="font-mono text-mono uppercase opacity-70" style={{ letterSpacing: "0.1em" }}>Novo cliente</p>
-          <h3 className="font-display text-h3 mt-2">Cadastrar cliente →</h3>
-          <p className="text-body-sm opacity-80 mt-2">Adicione um cliente novo e abra o primeiro dossiê.</p>
+          <h3 className="font-display text-h4 mt-2">Cadastrar agora →</h3>
         </Link>
       </div>
 
-      {/* Latest dossiers */}
-      <section className="mt-12">
+      {/* Re-engajamento */}
+      <section className="mb-10">
         <header className="flex items-end justify-between mb-4">
           <div>
-            <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.1em" }}>Atividade recente</p>
-            <h2 className="font-display text-h2 mt-1">Últimos dossiês</h2>
+            <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.1em" }}>
+              Reengajamento
+            </p>
+            <h2 className="font-display text-h2 mt-1">Quem precisa de contato</h2>
           </div>
+          <span className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.08em" }}>
+            {reengagement.length} cliente(s)
+          </span>
         </header>
+        <ReengagementList clients={reengagement} />
+      </section>
 
-        {latestDossiers && latestDossiers.length > 0 ? (
+      {/* Aniversariantes */}
+      {anniversaries.length > 0 && (
+        <section className="mb-10">
+          <header className="mb-4">
+            <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.1em" }}>
+              Hora do retorno
+            </p>
+            <h2 className="font-display text-h2 mt-1">Última visita há ~30 dias</h2>
+            <p className="text-body-sm text-text-secondary mt-1">
+              Janela ideal pra oferecer manutenção do corte.
+            </p>
+          </header>
+          <AnniversaryList clients={anniversaries} />
+        </section>
+      )}
+
+      {/* Últimos dossiês */}
+      <section>
+        <header className="mb-4">
+          <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.1em" }}>
+            Atividade recente
+          </p>
+          <h2 className="font-display text-h2 mt-1">Últimos dossiês</h2>
+        </header>
+        {latest.data && latest.data.length > 0 ? (
           <ul className="flex flex-col gap-2">
-            {latestDossiers.map((d) => {
+            {latest.data.map((d) => {
               const c = Array.isArray(d.clients) ? d.clients[0] : d.clients;
               return (
                 <li key={d.id}>
-                  <Link
-                    href={`/dossie/${d.id}`}
-                    className="flex items-center gap-4 p-4 rounded-lg bg-surface-card border border-border-subtle hover:border-border-strong transition-colors"
-                  >
-                    <span className="size-10 rounded-full bg-gradient-to-br from-primary-300 to-primary-700 text-neutral-50 flex items-center justify-center font-display text-body-sm">
+                  <Link href={`/dossie/${d.id}`} className="flex items-center gap-3 p-3 rounded-lg bg-surface-card border border-border-subtle hover:border-border-strong transition-colors">
+                    <span className="size-9 rounded-full bg-gradient-to-br from-primary-300 to-primary-700 text-neutral-50 flex items-center justify-center font-display text-body-sm">
                       {(c?.full_name ?? "?").split(" ").map((s: string) => s[0]).slice(0, 2).join("").toUpperCase()}
                     </span>
-                    <div className="flex-1">
-                      <p className="font-display text-h4">{d.title}</p>
-                      <p className="text-body-sm text-text-muted">{c?.full_name}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-display text-h4 truncate">{d.title}</p>
+                      <p className="text-body-sm text-text-muted truncate">{c?.full_name}</p>
                     </div>
                     <StatusBadge status={d.status} />
-                    <span className="font-mono text-caption text-text-muted">{new Date(d.scheduled_date).toLocaleDateString("pt-BR")}</span>
+                    <span className="font-mono text-caption text-text-muted">
+                      {new Date(d.scheduled_date).toLocaleDateString("pt-BR")}
+                    </span>
                   </Link>
                 </li>
               );
             })}
           </ul>
         ) : (
-          <div className="rounded-lg border border-dashed border-border-strong p-10 text-center">
+          <div className="rounded-lg border border-dashed border-border-strong p-8 text-center">
             <p className="font-display text-h4 text-text-muted">Nenhum dossiê ainda</p>
-            <p className="text-body-sm text-text-secondary mt-2">Crie um cliente e abra o primeiro dossiê.</p>
           </div>
         )}
       </section>
     </main>
-  );
-}
-
-function Stat({ label, value, hint, tone = "default" }: { label: string; value: number; hint: string; tone?: "default" | "success" }) {
-  return (
-    <div className="rounded-lg bg-surface-card border border-border-subtle p-5 shadow-1">
-      <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.08em" }}>{label}</p>
-      <p className={`font-display text-display mt-2 leading-none ${tone === "success" ? "text-success" : ""}`}>{value}</p>
-      <p className="text-body-sm text-text-secondary mt-3">{hint}</p>
-    </div>
   );
 }
 

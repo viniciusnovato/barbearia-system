@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Toaster } from "sonner";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { signOutAction } from "../login/actions";
 
@@ -37,6 +38,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
       {children}
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          className: "!bg-surface-card !text-text-primary !border !border-border-strong !shadow-2",
+        }}
+      />
     </div>
   );
 }
