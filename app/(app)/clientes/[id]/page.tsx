@@ -28,14 +28,14 @@ export default async function ClientProfilePage({ params }: PageProps) {
     .eq("client_id", id)
     .order("scheduled_date", { ascending: false });
 
-  // Imagens por dossiê (foto_cliente + expectativa_ia + marcacao_ipad)
+  // Imagens por dossiê (foto_cliente + marcacao_ipad)
   const dossierIds = (dossiers ?? []).map((d) => d.id);
   const { data: assets } = dossierIds.length
     ? await supabase
         .from("media_assets")
         .select("id, dossier_id, kind, storage_path, bucket, caption, included_in_pdf, created_at")
         .in("dossier_id", dossierIds)
-        .in("kind", ["foto_cliente", "expectativa_ia", "marcacao_ipad"])
+        .in("kind", ["foto_cliente", "marcacao_ipad"])
         .order("created_at", { ascending: true })
     : { data: [] as Array<{ id: string; dossier_id: string; kind: string; storage_path: string; bucket: string; caption: string | null; included_in_pdf: boolean; created_at: string }> };
 
@@ -50,7 +50,7 @@ export default async function ClientProfilePage({ params }: PageProps) {
     (dossiers ?? []).map(async (d) => {
       const dossierAssets = assetsByDossier.get(d.id) ?? [];
       const beforeAsset = dossierAssets.find((a) => a.kind === "foto_cliente");
-      const afterAsset = dossierAssets.find((a) => a.kind === "expectativa_ia") ?? dossierAssets.find((a) => a.kind === "marcacao_ipad");
+      const afterAsset = dossierAssets.find((a) => a.kind === "marcacao_ipad");
       return {
         ...d,
         beforeUrl: beforeAsset ? await getSignedUrl(beforeAsset.bucket, beforeAsset.storage_path, 3600) : null,
@@ -199,11 +199,11 @@ export default async function ClientProfilePage({ params }: PageProps) {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={d.afterUrl} alt="Depois" className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-text-muted text-caption">sem projeção</div>
+                          <div className="w-full h-full flex items-center justify-center text-text-muted text-caption">sem anotação</div>
                         )}
                         {d.afterUrl && (
-                          <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-ai-500/90 text-white font-mono text-[10px] uppercase backdrop-blur" style={{ letterSpacing: "0.08em" }}>
-                            ✨ depois
+                          <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-primary-500/90 text-white font-mono text-[10px] uppercase backdrop-blur" style={{ letterSpacing: "0.08em" }}>
+                            anotado
                           </span>
                         )}
                       </div>

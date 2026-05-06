@@ -18,7 +18,7 @@ const STEPS = [
   },
   {
     title: "3. Dossiê + IA",
-    body: "Em cada cliente abra um dossiê. Grave a conversa (áudio ou vídeo) e a IA preenche os 22 campos pra você. Pode também gerar uma 'imagem do depois' do cliente.",
+    body: "Em cada cliente abra um dossiê. Grave a conversa (áudio ou vídeo) e a IA Gemini preenche os 22 campos automaticamente. Você só revisa e aprova.",
   },
   {
     title: "4. Catálogo de produtos",
