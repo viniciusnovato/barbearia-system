@@ -59,6 +59,20 @@ export async function getReengagementList(thresholdDays = 30) {
   return data ?? [];
 }
 
+/** Clientes com retorno agendado nos próximos 14 dias (ou já atrasados). */
+export async function getUpcomingReturns() {
+  const supabase = await createServerSupabase();
+  const horizon = new Date(Date.now() + 14 * 86400_000).toISOString();
+  const { data } = await supabase
+    .from("clients_with_status")
+    .select("id, full_name, phone, next_return_at, next_return_note, days_to_return")
+    .not("next_return_at", "is", null)
+    .lte("next_return_at", horizon)
+    .order("next_return_at", { ascending: true })
+    .limit(15);
+  return data ?? [];
+}
+
 /** Clientes em "aniversário" — última visita há ~30d (ideal pra retorno). */
 export async function getAnniversaryList() {
   const supabase = await createServerSupabase();

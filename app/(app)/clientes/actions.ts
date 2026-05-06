@@ -85,6 +85,25 @@ export async function updateClientAction(formData: FormData) {
   redirect(`/clientes/${id}`);
 }
 
+export async function setNextReturnAction(formData: FormData): Promise<void> {
+  const supabase = await createServerSupabase();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const dateRaw = String(formData.get("next_return_at") ?? "").trim();
+  const note = (String(formData.get("next_return_note") ?? "").trim()) || null;
+
+  const next_return_at = dateRaw ? new Date(dateRaw + "T12:00:00Z").toISOString() : null;
+
+  await supabase
+    .from("clients")
+    .update({ next_return_at, next_return_note: note })
+    .eq("id", id);
+
+  revalidatePath(`/clientes/${id}`);
+  revalidatePath("/dashboard");
+}
+
 // Direto em <form action={...}> → Promise<void>
 export async function deleteClientAction(formData: FormData): Promise<void> {
   const supabase = await createServerSupabase();

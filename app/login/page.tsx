@@ -127,17 +127,25 @@ function LoginInner() {
             </button>
           </form>
 
-          <footer className="mt-10 pt-6 border-t border-border-subtle">
-            <p
-              className="font-mono text-caption uppercase text-text-muted mb-1"
-              style={{ letterSpacing: "0.08em" }}
-            >
-              Conta de teste
+          <footer className="mt-10 pt-6 border-t border-border-subtle flex flex-col gap-4">
+            <p className="text-body-sm text-text-secondary text-center">
+              Não tem conta?{" "}
+              <a href="/signup" className="text-primary-600 hover:underline">
+                Criar agora
+              </a>
             </p>
-            <p className="text-body-sm text-text-secondary">
-              <span className="font-mono">teste@mail.com</span> · senha{" "}
-              <span className="font-mono">123456</span>
-            </p>
+            <div>
+              <p
+                className="font-mono text-caption uppercase text-text-muted mb-1"
+                style={{ letterSpacing: "0.08em" }}
+              >
+                Conta de teste
+              </p>
+              <p className="text-body-sm text-text-secondary">
+                <span className="font-mono">teste@mail.com</span> · senha{" "}
+                <span className="font-mono">123456</span>
+              </p>
+            </div>
           </footer>
         </div>
       </section>

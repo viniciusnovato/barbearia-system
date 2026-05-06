@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getSignedUrl } from "@/lib/storage";
 import { createDossierAction } from "../../dossie/actions";
+import { NextReturnCard } from "./_components/NextReturnCard";
 
 export const dynamic = "force-dynamic";
 
@@ -138,6 +139,15 @@ export default async function ClientProfilePage({ params }: PageProps) {
           </form>
         </div>
       </header>
+
+      {/* Próximo retorno */}
+      <div className="mb-4">
+        <NextReturnCard
+          clientId={id}
+          initialDate={client.next_return_at as string | null}
+          initialNote={client.next_return_note as string | null}
+        />
+      </div>
 
       {/* Avisos contextuais */}
       <div className="flex flex-wrap gap-2 mb-8">

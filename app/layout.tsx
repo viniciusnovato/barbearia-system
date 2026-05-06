@@ -4,8 +4,24 @@ import "./globals.css";
 import { THEME_COOKIE, isTheme, type Theme } from "@/lib/theme/cookie";
 
 export const metadata: Metadata = {
-  title: "Visagismo — Consultoria de Imagem",
-  description: "Sistema de visagismo para barbeiros consultivos",
+  title: { default: "Visagismo · Consultoria de Imagem", template: "%s · Visagismo" },
+  description: "Sistema de visagismo para barbeiros consultivos: dossiês, IA, anotação iPad e PDF premium.",
+  applicationName: "Visagismo",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Visagismo",
+  },
+  formatDetection: { telephone: false },
+};
+
+export const viewport = {
+  themeColor: "#17150F",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

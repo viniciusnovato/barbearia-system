@@ -158,6 +158,8 @@ function DossierDoc({ title, scheduled, clientName, clientInstagram, clientPhoto
   const date = new Date(scheduled).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
   const photos = assets.filter((a) => a.kind === "foto_cliente" && a.dataUrl);
   const annotations = assets.filter((a) => a.kind === "marcacao_ipad" && a.dataUrl);
+  const refsCorte = assets.filter((a) => a.kind === "referencia_corte" && a.dataUrl);
+  const refsBarba = assets.filter((a) => a.kind === "referencia_barba" && a.dataUrl);
 
   return (
     <Document title={title} author={barberName}>
@@ -209,6 +211,30 @@ function DossierDoc({ title, scheduled, clientName, clientInstagram, clientPhoto
                 </View>
               );
             })}
+
+            {/* Referências de corte na seção corte */}
+            {s.id === "corte" && refsCorte.length > 0 && (
+              <View style={styles.imgRow}>
+                {refsCorte.slice(0, 3).map((a, i) => a.dataUrl && (
+                  <View key={`refc-${i}`} style={styles.imgItem} wrap={false}>
+                    <Image src={a.dataUrl} />
+                    <Text style={styles.imgCaption}>{a.caption ?? `Referência ${i + 1}`}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Referências de barba na seção barba */}
+            {s.id === "barba" && refsBarba.length > 0 && (
+              <View style={styles.imgRow}>
+                {refsBarba.slice(0, 2).map((a, i) => a.dataUrl && (
+                  <View key={`refb-${i}`} style={styles.imgItem} wrap={false}>
+                    <Image src={a.dataUrl} />
+                    <Text style={styles.imgCaption}>{a.caption ?? `Referência ${i + 1}`}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
 
             {/* Insere foto na seção análise visagista */}
             {s.id === "analise_visagista" && (photos.length > 0 || clientPhotoData) && (

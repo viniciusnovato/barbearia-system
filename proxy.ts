@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/clientes", "/dossie"];
-const AUTH_ROUTES = ["/login"];
+const PROTECTED_PREFIXES = ["/dashboard", "/clientes", "/dossie", "/produtos", "/configuracoes"];
+const AUTH_ROUTES = ["/login", "/signup"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

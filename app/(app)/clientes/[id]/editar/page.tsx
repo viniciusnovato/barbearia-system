@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getSignedUrl } from "@/lib/storage";
 import { ClientForm } from "../../_components/ClientForm";
-import { deleteClientAction, updateClientAction } from "../../actions";
+import { updateClientAction } from "../../actions";
+import { DeleteClientForm } from "./_components/DeleteClientForm";
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -39,16 +40,7 @@ export default async function EditClientPage({ params }: PageProps) {
 
       <hr className="my-10 border-border-subtle" />
 
-      <form action={deleteClientAction} className="rounded-lg border border-status-conflict-ring p-5 bg-status-conflict-bg/40">
-        <input type="hidden" name="id" value={id} />
-        <p className="font-display text-h4 text-status-conflict-fg">Apagar cliente</p>
-        <p className="text-body-sm mt-1 text-text-secondary">
-          Apaga o cliente e <strong>todos os dossiês</strong> dele. Esta ação não pode ser desfeita.
-        </p>
-        <button type="submit" className="mt-4 h-9 px-4 rounded-md bg-danger text-neutral-50 text-body-sm font-medium hover:brightness-110 transition-all">
-          Apagar permanentemente
-        </button>
-      </form>
+      <DeleteClientForm clientId={id} clientName={client.full_name} />
     </main>
   );
 }

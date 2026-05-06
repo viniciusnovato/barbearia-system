@@ -96,6 +96,24 @@ export default async function SettingsPage() {
         </form>
       </section>
 
+      {/* Templates de desenho */}
+      <section className="mb-10 rounded-2xl bg-surface-card border border-border-subtle p-6">
+        <p className="font-mono text-mono uppercase text-text-muted mb-3" style={{ letterSpacing: "0.1em" }}>
+          Templates de desenho
+        </p>
+        <h2 className="font-display text-h3 mb-2">Overlays anatômicos</h2>
+        <p className="text-body-sm text-text-secondary mb-5">
+          Crie linhas guia que aparecem com 1 clique no anotador. 3 templates default já vêm prontos
+          (terços faciais, mandíbula, conexão barba-cabelo).
+        </p>
+        <Link
+          href="/configuracoes/templates"
+          className="inline-flex h-10 px-4 items-center rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors"
+        >
+          Gerenciar templates →
+        </Link>
+      </section>
+
       {/* Tutorial */}
       <section className="mb-10 rounded-2xl bg-surface-card border border-border-subtle p-6">
         <p className="font-mono text-mono uppercase text-text-muted mb-3" style={{ letterSpacing: "0.1em" }}>

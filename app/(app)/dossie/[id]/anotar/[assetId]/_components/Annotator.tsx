@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createBrowserSupabase } from "@/lib/supabase/client";
+import { VersionCompare } from "./VersionCompare";
 
 type Tool = "pen" | "marker" | "eraser" | "arrow" | "circle" | "line";
 interface Stroke { tool: Tool; color: string; size: number; points: { x: number; y: number; p: number }[] }
@@ -58,6 +59,7 @@ export function Annotator({ assetId, dossierId, imageUrl, versions, templates }:
   const [saving, setSaving] = useState(false);
   const [hand, setHand] = useState<"r" | "l">("r");
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
 
   useEffect(() => {
     const img = new Image();
@@ -434,6 +436,15 @@ export function Annotator({ assetId, dossierId, imageUrl, versions, templates }:
               )}
             </div>
           )}
+          {versions.length > 0 && (
+            <button
+              onClick={() => setShowCompare(true)}
+              className="h-9 px-3 rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors inline-flex items-center gap-1.5"
+              title="Comparar versões"
+            >
+              ⇄ Comparar
+            </button>
+          )}
           <span className="inline-flex items-center gap-1 p-1 bg-surface-sunken rounded-full text-caption">
             <button onClick={() => setHand("r")} className={`px-3 h-7 rounded-full ${hand === "r" ? "bg-surface-card shadow-1" : "text-text-muted"}`}>Destra</button>
             <button onClick={() => setHand("l")} className={`px-3 h-7 rounded-full ${hand === "l" ? "bg-surface-card shadow-1" : "text-text-muted"}`}>Canhota</button>
@@ -511,6 +522,15 @@ export function Annotator({ assetId, dossierId, imageUrl, versions, templates }:
 
         {hand === "l" && <Toolbar tool={tool} setTool={setTool} color={color} setColor={setColor} onUndo={undo} onRedo={redo} canUndo={strokesRef.current.length > 0} canRedo={redoStackRef.current.length > 0} />}
       </div>
+
+      {showCompare && (
+        <VersionCompare
+          baseUrl={imageUrl}
+          baseLabel="Original"
+          versions={versions.map((v) => ({ id: v.id, name: v.name, url: v.previewUrl, createdAt: v.createdAt }))}
+          onClose={() => setShowCompare(false)}
+        />
+      )}
     </section>
   );
 }

@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { getDashboardStats, getReengagementList, getAnniversaryList } from "@/lib/dashboard/queries";
+import { getDashboardStats, getReengagementList, getAnniversaryList, getUpcomingReturns } from "@/lib/dashboard/queries";
 import { StatsRow } from "./_components/StatsRow";
 import { ReengagementList } from "./_components/ReengagementList";
 import { AnniversaryList } from "./_components/AnniversaryList";
+import { UpcomingReturns } from "./_components/UpcomingReturns";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +14,11 @@ export default async function DashboardPage() {
   const meta = (user?.user_metadata ?? {}) as { full_name?: string };
   const displayName = meta.full_name ?? user?.email?.split("@")[0] ?? "Barbeiro";
 
-  const [stats, reengagement, anniversaries, latest] = await Promise.all([
+  const [stats, reengagement, anniversaries, returns, latest] = await Promise.all([
     getDashboardStats(),
     getReengagementList(30),
     getAnniversaryList(),
+    getUpcomingReturns(),
     supabase
       .from("dossiers")
       .select("id, title, scheduled_date, status, clients!inner(id, full_name)")
@@ -53,6 +55,24 @@ export default async function DashboardPage() {
           <h3 className="font-display text-h4 mt-2">Cadastrar agora →</h3>
         </Link>
       </div>
+
+      {/* Próximos retornos */}
+      {returns.length > 0 && (
+        <section className="mb-10">
+          <header className="flex items-end justify-between mb-4">
+            <div>
+              <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.1em" }}>
+                Agenda · próximos 14 dias
+              </p>
+              <h2 className="font-display text-h2 mt-1">Retornos agendados</h2>
+            </div>
+            <span className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.08em" }}>
+              {returns.length} cliente(s)
+            </span>
+          </header>
+          <UpcomingReturns clients={returns} />
+        </section>
+      )}
 
       {/* Re-engajamento */}
       <section className="mb-10">

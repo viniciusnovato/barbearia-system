@@ -30,6 +30,7 @@ export default async function DossierPage({ params, searchParams }: PageProps) {
     { data: audios },
     { data: catalog },
     { data: dossierProductsRaw },
+    { data: refsRaw },
   ] = await Promise.all([
     supabase.from("dossier_fields").select("*").eq("dossier_id", id),
     supabase.from("transcript_blocks").select("*").eq("dossier_id", id).order("ord"),
@@ -38,6 +39,11 @@ export default async function DossierPage({ params, searchParams }: PageProps) {
     supabase.from("products")
       .select("id, product_id, purchased, barber_products(id, name, description, photo_path, price_brl)")
       .eq("dossier_id", id),
+    supabase.from("media_assets")
+      .select("id, kind, storage_path, bucket, caption")
+      .eq("dossier_id", id)
+      .in("kind", ["referencia_corte", "referencia_barba"])
+      .order("created_at"),
   ]);
 
   const catalogEnriched = await Promise.all(
@@ -49,6 +55,19 @@ export default async function DossierPage({ params, searchParams }: PageProps) {
       photoUrl: p.photo_path ? await getSignedUrl("barber-assets", p.photo_path, 3600) : null,
     })),
   );
+
+  const referencesByKind = {
+    referencia_corte: await Promise.all(
+      (refsRaw ?? [])
+        .filter((r) => r.kind === "referencia_corte")
+        .map(async (r) => ({ id: r.id as string, caption: r.caption as string | null, url: await getSignedUrl(r.bucket, r.storage_path, 3600) })),
+    ),
+    referencia_barba: await Promise.all(
+      (refsRaw ?? [])
+        .filter((r) => r.kind === "referencia_barba")
+        .map(async (r) => ({ id: r.id as string, caption: r.caption as string | null, url: await getSignedUrl(r.bucket, r.storage_path, 3600) })),
+    ),
+  };
 
   const dossierProducts = await Promise.all(
     (dossierProductsRaw ?? []).map(async (row) => {
@@ -90,6 +109,7 @@ export default async function DossierPage({ params, searchParams }: PageProps) {
       missingRequiredCount={missingRequired.length}
       catalog={catalogEnriched}
       dossierProducts={dossierProducts}
+      references={referencesByKind}
     />
   );
 }
