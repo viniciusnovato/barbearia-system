@@ -2,16 +2,32 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createBrowserSupabase } from "@/lib/supabase/client";
 
-type Mode = "idle" | "recording" | "paused" | "processing";
+type State = "idle" | "recording" | "paused" | "processing";
+type DossierMode = "entrevista" | "acompanhamento" | "antes_depois";
 
-export function AudioCapture({ dossierId }: { dossierId: string }) {
+const MODE_INFO: Record<DossierMode, { label: string; hint: string }> = {
+  entrevista: { label: "Entrevista completa", hint: "IA preenche todo o dossiê (22 campos)" },
+  acompanhamento: { label: "Acompanhamento curto", hint: "Só direcionamento técnico + ajustes" },
+  antes_depois: { label: "Antes/depois", hint: "Resumo do resultado obtido" },
+};
+
+interface Props {
+  dossierId: string;
+  initialMode?: DossierMode;
+}
+
+export function AudioCapture({ dossierId, initialMode = "entrevista" }: Props) {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("idle");
+  const [dossierMode, setDossierMode] = useState<DossierMode>(initialMode);
+  const [state, setState] = useState<State>("idle");
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [progressMsg, setProgressMsg] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [progressStage, setProgressStage] = useState<string>("");
   const [levels, setLevels] = useState<number[]>(Array.from({ length: 32 }, () => 0.2));
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -78,7 +94,7 @@ export function AudioCapture({ dossierId }: { dossierId: string }) {
       recorder.start(1000);
       recorderRef.current = recorder;
 
-      setMode("recording");
+      setState("recording");
       setSeconds(0);
       tickRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
     } catch (e) {
@@ -90,8 +106,8 @@ export function AudioCapture({ dossierId }: { dossierId: string }) {
   function pauseResume() {
     const r = recorderRef.current;
     if (!r) return;
-    if (mode === "recording") { r.pause(); setMode("paused"); if (tickRef.current) clearInterval(tickRef.current); }
-    else if (mode === "paused") { r.resume(); setMode("recording"); tickRef.current = setInterval(() => setSeconds((s) => s + 1), 1000); }
+    if (state === "recording") { r.pause(); setState("paused"); if (tickRef.current) clearInterval(tickRef.current); }
+    else if (state === "paused") { r.resume(); setState("recording"); tickRef.current = setInterval(() => setSeconds((s) => s + 1), 1000); }
   }
 
   function stopRecording() {
@@ -102,26 +118,35 @@ export function AudioCapture({ dossierId }: { dossierId: string }) {
   }
 
   async function handleRecorderStop() {
-    setMode("processing");
+    setState("processing");
     setProgressMsg("Preparando áudio…");
+    setProgress(2);
     cleanup();
     const mime = recorderRef.current?.mimeType ?? "audio/webm";
     const ext = mime.includes("mp4") ? "mp4" : mime.includes("ogg") ? "ogg" : "webm";
     const blob = new Blob(chunksRef.current, { type: mime });
-    await uploadAndProcess(blob, ext, "live");
+    await uploadAndProcess(blob, ext, "live", "audio");
   }
 
   async function handleFileImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setError(null);
-    setMode("processing");
+    setState("processing");
     setProgressMsg("Enviando arquivo…");
+    setProgress(2);
     const ext = (file.name.split(".").pop() ?? "audio").toLowerCase();
-    await uploadAndProcess(file, ext, "upload");
+    const isVideo = file.type.startsWith("video/") || ["mp4", "mov", "webm", "avi", "mkv"].includes(ext);
+    await uploadAndProcess(file, ext, "upload", isVideo ? "video" : "audio");
   }
 
-  async function uploadAndProcess(blob: Blob, ext: string, source: "live" | "upload") {
+  async function uploadAndProcess(
+    blob: Blob,
+    ext: string,
+    source: "live" | "upload",
+    mediaKind: "audio" | "video",
+  ) {
+    let stopPolling: (() => void) | null = null;
     try {
       const supabase = createBrowserSupabase();
       const { data: { user } } = await supabase.auth.getUser();
@@ -130,19 +155,20 @@ export function AudioCapture({ dossierId }: { dossierId: string }) {
       const audioId = crypto.randomUUID();
       const path = `${user.id}/${dossierId}/${audioId}.${ext}`;
 
-      setProgressMsg("Subindo para o storage…");
+      setProgressMsg(mediaKind === "video" ? "Subindo vídeo…" : "Subindo áudio…");
+      setProgress(8);
       const { error: upErr } = await supabase.storage.from("audio").upload(path, blob, {
         upsert: false,
-        contentType: blob.type || `audio/${ext}`,
+        contentType: blob.type || `${mediaKind}/${ext}`,
       });
       if (upErr) throw upErr;
 
-      // Estima duração via <audio>
       const url = URL.createObjectURL(blob);
-      const duration = await estimateDuration(url).catch(() => null);
+      const duration = await estimateDuration(url, mediaKind).catch(() => null);
       URL.revokeObjectURL(url);
 
       setProgressMsg("Registrando no dossiê…");
+      setProgress(15);
       const { data: row, error: insertErr } = await supabase
         .from("audio_recordings")
         .insert({
@@ -150,15 +176,36 @@ export function AudioCapture({ dossierId }: { dossierId: string }) {
           dossier_id: dossierId,
           source,
           storage_path: path,
-          mime_type: blob.type || `audio/${ext}`,
+          mime_type: blob.type || `${mediaKind}/${ext}`,
           duration_seconds: duration,
+          media_kind: mediaKind,
+          processing_progress: 0,
         })
         .select("id")
         .single();
-      if (insertErr || !row) throw insertErr ?? new Error("Falha ao registrar áudio");
+      if (insertErr || !row) throw insertErr ?? new Error("Falha ao registrar arquivo");
 
-      // Dispara processamento Gemini
-      setProgressMsg("Transcrevendo com a IA Gemini…");
+      // Atualiza o modo do dossiê
+      await supabase.from("dossiers").update({ mode: dossierMode }).eq("id", dossierId);
+
+      // Polling do progresso real (atualizado pela Edge Function)
+      let polling = true;
+      const interval = setInterval(async () => {
+        if (!polling) return;
+        const { data } = await supabase
+          .from("audio_recordings")
+          .select("processing_progress, processing_stage")
+          .eq("id", row.id)
+          .maybeSingle();
+        if (data) {
+          if (typeof data.processing_progress === "number") setProgress(Math.max(15, data.processing_progress));
+          if (data.processing_stage) setProgressStage(data.processing_stage);
+        }
+      }, 1500);
+      stopPolling = () => { polling = false; clearInterval(interval); };
+
+      setProgressMsg(mediaKind === "video" ? "Enviando vídeo para Gemini…" : "Enviando para Gemini…");
+
       const { data: { session } } = await supabase.auth.getSession();
       const fnUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/transcribe-audio`;
       const res = await fetch(fnUrl, {
@@ -168,53 +215,88 @@ export function AudioCapture({ dossierId }: { dossierId: string }) {
           Authorization: `Bearer ${session?.access_token}`,
           apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         },
-        body: JSON.stringify({ audio_id: row.id }),
+        body: JSON.stringify({ audio_id: row.id, mode: dossierMode }),
       });
+
+      stopPolling();
 
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        console.warn("transcribe-audio falhou", j);
-        // Tudo bem — o áudio ficou salvo, só não foi processado.
-        setProgressMsg("Áudio salvo. Processamento pode ser refeito depois.");
+        toast.error("Falha ao processar", { description: j.error ?? res.statusText });
+        setProgressMsg("Arquivo salvo. Tente reprocessar pelo dossiê.");
       } else {
         const j = await res.json();
-        if (j.stub) setProgressMsg("Áudio salvo (transcrição real chega na próxima atualização).");
-        else setProgressMsg(`Pronto. ${j.blocks_count ?? 0} blocos extraídos.`);
+        setProgress(100);
+        toast.success(`Pronto! ${j.blocks_count ?? 0} blocos extraídos`, {
+          description: j.fields_classified ? `${j.fields_classified} campo(s) preenchidos pela IA.` : undefined,
+        });
+        setProgressMsg("Concluído.");
       }
 
-      // Volta para o dossiê
-      setTimeout(() => router.push(`/dossie/${dossierId}`), 1200);
+      setTimeout(() => router.push(`/dossie/${dossierId}`), 800);
     } catch (e) {
+      stopPolling?.();
       console.error(e);
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
-      setMode("idle");
+      setState("idle");
       setProgressMsg(null);
+      setProgress(0);
+      toast.error("Erro", { description: msg });
     }
   }
 
-  function estimateDuration(url: string): Promise<number> {
+  function estimateDuration(url: string, kind: "audio" | "video"): Promise<number> {
     return new Promise((resolve, reject) => {
-      const a = new Audio();
-      a.preload = "metadata";
-      a.onloadedmetadata = () => resolve(a.duration);
-      a.onerror = () => reject(new Error("metadata fail"));
-      a.src = url;
+      const el: HTMLMediaElement = kind === "video" ? document.createElement("video") : new Audio();
+      el.preload = "metadata";
+      el.onloadedmetadata = () => resolve(el.duration);
+      el.onerror = () => reject(new Error("metadata fail"));
+      el.src = url;
     });
   }
 
-  const isLive = mode === "recording";
-  const isProcessing = mode === "processing";
+  const isLive = state === "recording";
+  const isProcessing = state === "processing";
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Modo do dossiê */}
+      <section className="rounded-2xl bg-surface-card border border-border-subtle p-5">
+        <p className="font-mono text-mono uppercase text-text-muted mb-3" style={{ letterSpacing: "0.1em" }}>
+          Modo da gravação
+        </p>
+        <div className="grid sm:grid-cols-3 gap-2">
+          {(Object.keys(MODE_INFO) as DossierMode[]).map((m) => {
+            const info = MODE_INFO[m];
+            const active = dossierMode === m;
+            return (
+              <button
+                key={m}
+                type="button"
+                disabled={isProcessing}
+                onClick={() => setDossierMode(m)}
+                className={`text-left p-3 rounded-md border transition-all ${
+                  active
+                    ? "border-primary-500 bg-primary-50/40 ring-1 ring-primary-500"
+                    : "border-border-subtle hover:border-border-strong"
+                } disabled:opacity-50`}
+              >
+                <p className={`font-display text-body-lg ${active ? "text-primary-700" : ""}`}>{info.label}</p>
+                <p className="text-caption text-text-muted mt-1">{info.hint}</p>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Recorder card */}
       <section className="rounded-2xl bg-surface-card border border-border-subtle shadow-3 p-7">
         <header className="flex items-center justify-between mb-6">
           <span className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.1em" }}>
-            {mode === "idle" ? "Toque para gravar" :
-             mode === "recording" ? "Gravando conversa" :
-             mode === "paused" ? "Pausado" :
+            {state === "idle" ? "Toque para gravar" :
+             state === "recording" ? "Gravando conversa" :
+             state === "paused" ? "Pausado" :
              "Processando"}
           </span>
           <span className="font-mono text-h3 text-text-primary tabular-nums">{formatTime(seconds)}</span>
@@ -230,7 +312,7 @@ export function AudioCapture({ dossierId }: { dossierId: string }) {
         </div>
 
         <div className="flex items-center justify-center gap-4">
-          {mode === "idle" || isProcessing ? (
+          {state === "idle" || isProcessing ? (
             <button
               onClick={startRecording}
               disabled={isProcessing}
@@ -264,20 +346,45 @@ export function AudioCapture({ dossierId }: { dossierId: string }) {
       {/* Import */}
       <section className="rounded-2xl border border-dashed border-border-strong p-6">
         <p className="font-mono text-mono uppercase text-text-muted mb-2" style={{ letterSpacing: "0.1em" }}>
-          Ou importe um áudio
+          Ou importe um arquivo
         </p>
         <p className="text-body-sm text-text-secondary mb-4">
-          WhatsApp, gravação do celular, áudio enviado pelo cliente. Formatos: m4a, mp3, ogg, webm, wav.
+          Áudio (m4a, mp3, ogg, webm, wav) ou <strong>vídeo</strong> (mp4, mov, webm). A IA separa o áudio do vídeo automaticamente.
         </p>
         <label className="cursor-pointer inline-flex h-touch px-5 items-center rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors">
-          <input type="file" accept="audio/*" onChange={handleFileImport} disabled={isProcessing} className="hidden" />
+          <input
+            type="file"
+            accept="audio/*,video/*"
+            onChange={handleFileImport}
+            disabled={isProcessing}
+            className="hidden"
+          />
           📁 Escolher arquivo
         </label>
       </section>
 
-      {progressMsg && (
-        <div className="px-4 py-3 rounded-md bg-status-suggested-bg text-status-suggested-fg text-body-sm ring-1 ring-inset ring-status-suggested-ring flex items-center gap-3">
-          <span className="size-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+      {/* Barra de progresso */}
+      {isProcessing && (
+        <div className="rounded-md bg-status-suggested-bg ring-1 ring-inset ring-status-suggested-ring p-4">
+          <div className="flex items-center justify-between mb-2 gap-3">
+            <span className="text-body-sm text-status-suggested-fg flex items-center gap-2">
+              <span className="size-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+              {progressStage || progressMsg || "Processando…"}
+            </span>
+            <span className="font-mono text-mono text-status-suggested-fg tabular-nums" style={{ letterSpacing: "0.06em" }}>
+              {progress}%
+            </span>
+          </div>
+          <div className="h-1.5 bg-status-suggested-ring/40 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-ai-500 transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+      {!isProcessing && progressMsg && (
+        <div className="px-4 py-3 rounded-md bg-status-suggested-bg text-status-suggested-fg text-body-sm ring-1 ring-inset ring-status-suggested-ring">
           {progressMsg}
         </div>
       )}

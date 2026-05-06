@@ -10,12 +10,13 @@ export default async function RecordPage({ params }: PageProps) {
   const supabase = await createServerSupabase();
   const { data: dossier } = await supabase
     .from("dossiers")
-    .select("id, title, clients!inner(id, full_name)")
+    .select("id, title, mode, clients!inner(id, full_name)")
     .eq("id", id)
     .maybeSingle();
   if (!dossier) notFound();
 
   const client = Array.isArray(dossier.clients) ? dossier.clients[0] : dossier.clients;
+  const initialMode = (dossier.mode ?? "entrevista") as "entrevista" | "acompanhamento" | "antes_depois";
 
   return (
     <main className="max-w-3xl mx-auto px-6 lg:px-10 py-10">
@@ -23,11 +24,11 @@ export default async function RecordPage({ params }: PageProps) {
         ← {dossier.title}
       </Link>
       <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.1em" }}>
-        Captura de áudio · {client.full_name}
+        Captura · {client.full_name}
       </p>
-      <h1 className="font-display text-h1 mt-2 mb-8">Gravar ou importar conversa</h1>
+      <h1 className="font-display text-h1 mt-2 mb-8">Gravar áudio ou vídeo</h1>
 
-      <AudioCapture dossierId={id} />
+      <AudioCapture dossierId={id} initialMode={initialMode} />
     </main>
   );
 }

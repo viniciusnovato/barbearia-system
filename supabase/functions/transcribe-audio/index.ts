@@ -61,7 +61,9 @@ Deno.serve(async (req) => {
 
   try {
     const ctx = await requireUser(req);
-    const { audio_id } = await req.json();
+    const body = await req.json();
+    const audio_id: string | undefined = body.audio_id;
+    const mode: "entrevista" | "acompanhamento" | "antes_depois" = body.mode ?? "entrevista";
     if (!audio_id) return jsonRes({ error: "audio_id obrigatório" }, 400);
 
     // Cliente service_role para ler/escrever ignorando RLS de leitura do storage
@@ -71,24 +73,35 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } },
     );
 
+    const setProgress = async (progress: number, stage: string) => {
+      await admin.from("audio_recordings")
+        .update({ processing_progress: progress, processing_stage: stage })
+        .eq("id", audio_id);
+    };
+
+    await setProgress(5, "Validando");
+
     // Verifica posse via cliente do user (respeita RLS)
     const { data: audio, error: aErr } = await ctx.supabase
       .from("audio_recordings")
-      .select("id, dossier_id, storage_path, mime_type")
+      .select("id, dossier_id, storage_path, mime_type, media_kind")
       .eq("id", audio_id)
       .maybeSingle();
     if (aErr || !audio) return jsonRes({ error: "Áudio não encontrado ou sem permissão" }, 404);
 
-    // (não deletamos blocos antigos antes de processar — só substituímos se a nova tentativa der certo)
+    await setProgress(10, "Baixando arquivo");
 
-    // Baixa o áudio
+    // Baixa o áudio/vídeo
     const { data: file, error: dErr } = await admin.storage.from("audio").download(audio.storage_path);
     if (dErr || !file) {
-      await admin.from("audio_recordings").update({ error: dErr?.message ?? "download fail" }).eq("id", audio_id);
-      return jsonRes({ error: "Falha ao baixar áudio" }, 500);
+      await admin.from("audio_recordings").update({ error: dErr?.message ?? "download fail", processing_progress: 0 }).eq("id", audio_id);
+      return jsonRes({ error: "Falha ao baixar arquivo" }, 500);
     }
     const arrayBuffer = await file.arrayBuffer();
+    await setProgress(25, "Preparando para IA");
     const base64 = bytesToBase64(new Uint8Array(arrayBuffer));
+
+    await setProgress(35, audio.media_kind === "video" ? "Transcrevendo vídeo" : "Transcrevendo áudio");
 
     // Chama Gemini 2.5 Flash
     let result: { transcript_full: string; blocks: BlockJson[] } | null = null;
@@ -122,9 +135,11 @@ Deno.serve(async (req) => {
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error("Falha Gemini:", msg, "Raw:", rawText.slice(0, 500));
-      await admin.from("audio_recordings").update({ error: msg.slice(0, 1000) }).eq("id", audio_id);
+      await admin.from("audio_recordings").update({ error: msg.slice(0, 1000), processing_progress: 0 }).eq("id", audio_id);
       return jsonRes({ error: msg, raw_preview: rawText.slice(0, 300) }, 500);
     }
+
+    await setProgress(70, "Estruturando blocos");
 
     // Limpa blocos antigos só agora que sabemos que a nova chamada deu certo
     await admin.from("transcript_blocks").delete().eq("audio_id", audio_id);
@@ -152,15 +167,19 @@ Deno.serve(async (req) => {
       .update({ processed_at: new Date().toISOString(), transcript_full: result.transcript_full, error: null })
       .eq("id", audio_id);
 
+    await setProgress(85, "Classificando campos");
+
     // Classificação SÍNCRONA: aguarda terminar antes de devolver, pra que
     // a UI já encontre os campos preenchidos quando renderizar o dossiê.
     let classifiedCount = 0;
     try {
-      classifiedCount = await classifyDossierFields(admin, audio.dossier_id, ctx.userId);
+      classifiedCount = await classifyDossierFields(admin, audio.dossier_id, ctx.userId, mode);
     } catch (e) {
       console.error("classify error:", e);
       // Não falha a request — blocos já estão salvos.
     }
+
+    await setProgress(100, "Concluído");
 
     return jsonRes({
       ok: true,
@@ -203,14 +222,21 @@ Regras:
 - Use source_block_ords para apontar os blocos (ord) que sustentam a resposta.
 - Se nenhum bloco responde um campo, NÃO inclua esse campo na saída.
 - Se o cliente disser coisas contraditórias, sinalize escrevendo "Contradição: ..." no início do valor e relatando o conflito.
-- Campos disponíveis: ${FIELD_KEYS.map((f) => `${f.key} (${f.label})`).join("; ")}.`;
+- Em modos "acompanhamento" e "antes_depois", também preencha summary_done: 1-2 frases descrevendo objetivamente O QUE FOI FEITO neste atendimento.`;
 
 interface BlockJson { ord: number; speaker: string; text: string; start_seconds?: number; end_seconds?: number; intent: string; target_field_key?: string; is_noise: boolean }
+
+const MODE_FIELDS: Record<string, string[]> = {
+  entrevista: FIELD_KEYS.map((f) => f.key), // todos
+  acompanhamento: ["direcionamento_tecnico", "ajustes_personalizados"],
+  antes_depois: ["direcao_visual", "comunicacao_nova_imagem", "resultado_esperado", "ajustes_personalizados"],
+};
 
 async function classifyDossierFields(
   admin: ReturnType<typeof createClient>,
   dossier_id: string,
   _userId: string,
+  mode: "entrevista" | "acompanhamento" | "antes_depois" = "entrevista",
 ): Promise<number> {
   const { data: blocks } = await admin
     .from("transcript_blocks")
@@ -223,21 +249,54 @@ async function classifyDossierFields(
   const ordToId = new Map<number, string>();
   for (const b of blocks) ordToId.set(b.ord, b.id);
 
-  const prompt = `Blocos da transcrição (ignore ruídos já filtrados):
+  const allowedFields = MODE_FIELDS[mode] ?? MODE_FIELDS.entrevista;
+  const fieldList = FIELD_KEYS.filter((f) => allowedFields.includes(f.key));
+
+  const modeContext = mode === "acompanhamento"
+    ? "Este áudio é um acompanhamento curto de cliente recorrente. Foque APENAS no que foi feito/ajustado neste atendimento."
+    : mode === "antes_depois"
+    ? "Este áudio descreve antes/depois. Resuma a transformação e o resultado obtido, sem fazer entrevista nova."
+    : "Este áudio é uma entrevista completa de visagismo. Preencha os campos do dossiê com base na conversa.";
+
+  const prompt = `${modeContext}
+
+Blocos da transcrição (ignore ruídos já filtrados):
 ${blocks.map((b) => `[${b.ord}] (${b.speaker}, intent=${b.intent}): ${b.text}`).join("\n")}
 
+Campos disponíveis neste modo: ${fieldList.map((f) => `${f.key} (${f.label})`).join("; ")}.
 Devolva o JSON conforme o schema. Inclua apenas campos com evidência.`;
 
-  let result: { fields: { field_key: string; value: string; source_block_ords: number[] }[] };
+  // Schema dinâmico por mode (filtra enum de field_key)
+  const dynamicSchema = {
+    type: "object",
+    properties: {
+      fields: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            field_key: { type: "string", enum: allowedFields },
+            value: { type: "string" },
+            source_block_ords: { type: "array", items: { type: "integer" } },
+          },
+          required: ["field_key", "value", "source_block_ords"],
+        },
+      },
+      summary_done: { type: "string" },
+    },
+    required: ["fields"],
+  };
+
+  let result: { fields: { field_key: string; value: string; source_block_ords: number[] }[]; summary_done?: string };
   try {
     const r = await gemini(prompt, {
       model: "gemini-2.5-flash",
       systemInstruction: CLASSIFY_SYSTEM,
-      responseSchema: CLASSIFY_SCHEMA,
+      responseSchema: dynamicSchema,
       temperature: 0.4,
       maxOutputTokens: 4096,
     });
-    result = r.json as { fields: { field_key: string; value: string; source_block_ords: number[] }[] };
+    result = r.json as typeof result;
     if (!result || !Array.isArray(result.fields)) return 0;
   } catch (e) {
     console.error("classify gemini", e);
@@ -274,6 +333,14 @@ Devolva o JSON conforme o schema. Inclua apenas campos com evidência.`;
     .update({ status: "em_revisao" })
     .eq("id", dossier_id)
     .eq("status", "rascunho");
+
+  // Salva summary_done se a IA gerou um (em modos acompanhamento/antes_depois)
+  if (result.summary_done && result.summary_done.trim().length > 0) {
+    await admin
+      .from("dossiers")
+      .update({ summary_done: result.summary_done.trim() })
+      .eq("id", dossier_id);
+  }
 
   return updated;
 }
