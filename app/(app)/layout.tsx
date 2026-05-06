@@ -24,6 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <nav className="hidden md:flex items-center gap-1">
             <NavLink href="/dashboard">Painel</NavLink>
             <NavLink href="/clientes">Clientes</NavLink>
+            <NavLink href="/produtos">Produtos</NavLink>
           </nav>
         </div>
         <div className="flex items-center gap-3">

@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { DOSSIER_SECTIONS, type SectionId } from "@/lib/dossier/schema";
 import { FieldRow } from "./FieldRow";
 import { TranscriptPanel } from "./TranscriptPanel";
+import { ProductsSection } from "./ProductsSection";
 import { finalizeDossierAction, updateDossierTitleAction } from "../../actions";
 
 interface DossierField {
@@ -46,9 +47,11 @@ interface Props {
   audios: Audio[];
   progress: { id: string; total: number; filled: number; ready: number }[];
   missingRequiredCount: number;
+  catalog: { id: string; name: string; description: string | null; photoUrl: string | null; price_brl: number | null }[];
+  dossierProducts: { id: string; product_id: string | null; purchased: boolean; catalog: { id: string; name: string; description: string | null; price_brl: number | null; photoUrl: string | null } | null }[];
 }
 
-export function DossierEditor({ dossier, client, activeSection, fields, blocks, audios, progress, missingRequiredCount }: Props) {
+export function DossierEditor({ dossier, client, activeSection, fields, blocks, audios, progress, missingRequiredCount, catalog, dossierProducts }: Props) {
   const [section, setSection] = useState<SectionId>(activeSection as SectionId);
   const [hoveredFieldKey, setHoveredFieldKey] = useState<string | null>(null);
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
@@ -182,11 +185,17 @@ export function DossierEditor({ dossier, client, activeSection, fields, blocks, 
           })()}
         </div>
 
-        {/* Campos */}
-        {sectionDef.fields.length === 0 ? (
+        {/* Produtos: render especial */}
+        {section === "produtos" ? (
+          <ProductsSection
+            dossierId={dossier.id}
+            catalog={catalog}
+            dossierProducts={dossierProducts}
+            isFinalized={isFinalized}
+          />
+        ) : sectionDef.fields.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border-strong p-8 text-center">
             <p className="font-display text-h4 text-text-muted">Seção sem campos pré-definidos</p>
-            <p className="text-body-sm text-text-secondary mt-2">Em breve — adicionar produtos e referências.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
