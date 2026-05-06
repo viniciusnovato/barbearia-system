@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ProductsSection } from "./ProductsSection";
+import { EvolutionPhotos, type DossierPhoto } from "./EvolutionPhotos";
 import {
   finalizeDossierAction,
   updateDossierTitleAction,
@@ -30,9 +31,10 @@ interface Props {
   fields: DossierField[];
   catalog: { id: string; name: string; description: string | null; photoUrl: string | null; price_brl: number | null }[];
   dossierProducts: { id: string; product_id: string | null; purchased: boolean; catalog: { id: string; name: string; description: string | null; price_brl: number | null; photoUrl: string | null } | null }[];
+  photos: DossierPhoto[];
 }
 
-export function AcompanhamentoEditor({ dossier, client, fields, catalog, dossierProducts }: Props) {
+export function AcompanhamentoEditor({ dossier, client, fields, catalog, dossierProducts, photos }: Props) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [title, setTitle] = useState(dossier.title);
   const [summary, setSummary] = useState(dossier.summary_done ?? "");
@@ -175,6 +177,11 @@ export function AcompanhamentoEditor({ dossier, client, fields, catalog, dossier
           className="w-full px-3 py-2 rounded-md bg-surface-card border border-border-strong focus:border-primary-500 focus:shadow-focus focus:outline-none transition-all text-body resize-y disabled:opacity-60"
         />
       </section>
+
+      {/* Fotos da evolução */}
+      <div className="mb-8">
+        <EvolutionPhotos dossierId={dossier.id} photos={photos} isFinalized={isFinalized} />
+      </div>
 
       {/* Produtos */}
       <section className="mb-8 rounded-lg bg-surface-card border border-border-subtle p-5">

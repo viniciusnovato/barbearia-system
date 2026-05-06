@@ -47,7 +47,7 @@ export default async function DossierPage({ params, searchParams }: PageProps) {
       .order("created_at", { ascending: true }),
   ]);
 
-  const [{ data: pdfHistory }, { data: dossierTemplates }] = await Promise.all([
+  const [{ data: pdfHistory }, { data: dossierTemplates }, { data: photosRaw }] = await Promise.all([
     supabase
       .from("pdf_versions")
       .select("id, storage_path, generated_at")
@@ -57,7 +57,23 @@ export default async function DossierPage({ params, searchParams }: PageProps) {
       .from("dossier_templates")
       .select("id, name, description, fields")
       .order("created_at", { ascending: false }),
+    supabase
+      .from("media_assets")
+      .select("id, storage_path, bucket, caption, sort_order, created_at")
+      .eq("dossier_id", id)
+      .eq("kind", "foto_cliente")
+      .is("parent_asset_id", null)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
   ]);
+
+  const photos = await Promise.all(
+    (photosRaw ?? []).map(async (p) => ({
+      id: p.id as string,
+      caption: (p.caption as string | null) ?? null,
+      url: await getSignedUrl(p.bucket as string, p.storage_path as string, 3600),
+    })),
+  );
 
   const dossierTemplatesEnriched = (dossierTemplates ?? []).map((t) => ({
     id: t.id as string,
@@ -131,6 +147,7 @@ export default async function DossierPage({ params, searchParams }: PageProps) {
         fields={(fields ?? []).map((f) => ({ id: f.id, field_key: f.field_key, value: f.value, status: f.status }))}
         catalog={catalogEnriched}
         dossierProducts={dossierProducts}
+        photos={photos}
       />
     );
   }
