@@ -17,7 +17,7 @@ export default async function DossierPage({ params, searchParams }: PageProps) {
 
   const { data: dossier } = await supabase
     .from("dossiers")
-    .select("*, clients!inner(id, full_name, photo_url)")
+    .select("*, clients!inner(id, full_name, phone, photo_url)")
     .eq("id", id)
     .maybeSingle();
   if (!dossier) notFound();
@@ -45,6 +45,25 @@ export default async function DossierPage({ params, searchParams }: PageProps) {
       .in("kind", ["referencia_corte", "referencia_barba"])
       .order("created_at"),
   ]);
+
+  const [{ data: pdfHistory }, { data: dossierTemplates }] = await Promise.all([
+    supabase
+      .from("pdf_versions")
+      .select("id, storage_path, generated_at")
+      .eq("dossier_id", id)
+      .order("generated_at", { ascending: false }),
+    supabase
+      .from("dossier_templates")
+      .select("id, name, description, fields")
+      .order("created_at", { ascending: false }),
+  ]);
+
+  const dossierTemplatesEnriched = (dossierTemplates ?? []).map((t) => ({
+    id: t.id as string,
+    name: t.name as string,
+    description: t.description as string | null,
+    fieldCount: Array.isArray(t.fields) ? (t.fields as unknown[]).length : 0,
+  }));
 
   const catalogEnriched = await Promise.all(
     (catalog ?? []).map(async (p) => ({
@@ -100,7 +119,7 @@ export default async function DossierPage({ params, searchParams }: PageProps) {
   return (
     <DossierEditor
       dossier={{ id: dossier.id, title: dossier.title, status: dossier.status, scheduled_date: dossier.scheduled_date, pdf_url: dossier.pdf_url }}
-      client={{ id: client.id, full_name: client.full_name }}
+      client={{ id: client.id, full_name: client.full_name, phone: client.phone ?? null }}
       activeSection={activeSection}
       fields={fields ?? []}
       blocks={blocks ?? []}
@@ -110,6 +129,8 @@ export default async function DossierPage({ params, searchParams }: PageProps) {
       catalog={catalogEnriched}
       dossierProducts={dossierProducts}
       references={referencesByKind}
+      pdfHistory={(pdfHistory ?? []).map((p) => ({ id: p.id, storage_path: p.storage_path, generated_at: p.generated_at }))}
+      dossierTemplates={dossierTemplatesEnriched}
     />
   );
 }

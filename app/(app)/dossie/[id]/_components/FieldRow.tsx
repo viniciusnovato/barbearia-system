@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import type { FieldDef } from "@/lib/dossier/schema";
-import { approveFieldAction, discardFieldAction, updateFieldAction } from "../../actions";
+import { ALL_FIELDS } from "@/lib/dossier/schema";
+import { approveFieldAction, discardFieldAction, updateFieldAction, reassignFieldAction } from "../../actions";
 
 type FieldStatus = "vazio" | "sugerido" | "editado" | "aprovado" | "conflito";
 
@@ -32,6 +33,7 @@ export function FieldRow({ fieldDef, field, dossierId, blocks, isFinalized, high
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(field.value ?? "");
   const [showOrigin, setShowOrigin] = useState(false);
+  const [showReassign, setShowReassign] = useState(false);
   const status = field.status as FieldStatus;
   const sources = (field.source_block_ids ?? []).map((id) => blocks.find((b) => b.id === id)).filter(Boolean) as Block[];
 
@@ -114,6 +116,38 @@ export function FieldRow({ fieldDef, field, dossierId, blocks, isFinalized, high
           )}
         </div>
         <div className="flex items-center gap-1">
+          {!isFinalized && status !== "vazio" && status !== "aprovado" && (
+            <div className="relative">
+              <button
+                type="button"
+                title="Mover para outro campo"
+                onClick={() => setShowReassign((s) => !s)}
+                className="size-8 rounded-md inline-flex items-center justify-center text-text-muted hover:bg-surface-sunken hover:text-text-primary transition-colors"
+              >
+                <MoveIcon />
+              </button>
+              {showReassign && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowReassign(false)} />
+                  <div className="absolute right-0 top-9 z-20 w-72 max-h-72 overflow-y-auto rounded-lg bg-surface-card border border-border-strong shadow-3">
+                    <p className="font-mono text-mono uppercase text-text-muted px-3 pt-3 pb-1.5 sticky top-0 bg-surface-card" style={{ letterSpacing: "0.1em" }}>
+                      Mover este conteúdo para:
+                    </p>
+                    {ALL_FIELDS.filter((f) => f.key !== field.field_key).map((f) => (
+                      <form key={f.key} action={async (fd) => { await reassignFieldAction(fd); setShowReassign(false); }}>
+                        <input type="hidden" name="dossier_id" value={dossierId} />
+                        <input type="hidden" name="from_key" value={field.field_key} />
+                        <input type="hidden" name="to_key" value={f.key} />
+                        <button type="submit" className="w-full text-left px-3 py-2 text-body-sm hover:bg-surface-sunken transition-colors">
+                          {f.label}
+                        </button>
+                      </form>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           {!isFinalized && status !== "vazio" && (
             <form action={discardFieldAction}>
               <input type="hidden" name="dossier_id" value={dossierId} />
@@ -186,3 +220,4 @@ function PencilIcon() { return <svg viewBox="0 0 24 24" width="16" height="16" f
 function TrashIcon() { return <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></svg>; }
 function CheckIcon() { return <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>; }
 function QuoteIcon() { return <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 7h4v4H8v3H5V9a2 2 0 012-2zm9 0h4v4h-3v3h-3V9a2 2 0 012-2z" /></svg>; }
+function MoveIcon() { return <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M19 9l3 3-3 3M9 19l3 3 3-3M2 12h20M12 2v20" /></svg>; }

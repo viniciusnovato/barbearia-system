@@ -20,10 +20,10 @@ interface CardDef {
 
 const cards: CardDef[] = [
   { id: "total", label: "Clientes", hint: "Total cadastrados", tone: "neutral" },
-  { id: "novosMes", label: "Novos do mês", hint: "Cadastrados este mês", tone: "primary" },
+  { id: "novosMes", label: "Novos do período", hint: "Cadastrados na janela", tone: "primary" },
   { id: "recorrentes", label: "Recorrentes", hint: "≥ 2 atendimentos", tone: "ai" },
   { id: "ativos", label: "Ativos", hint: "Vieram nos últimos 30 dias", tone: "success" },
-  { id: "receitaMes", label: "Receita do mês", hint: "Produtos vendidos", tone: "primary", isCurrency: true },
+  { id: "receitaMes", label: "Receita do período", hint: "Produtos vendidos", tone: "primary", isCurrency: true },
 ];
 
 export function StatsRow(props: StatsRowProps) {

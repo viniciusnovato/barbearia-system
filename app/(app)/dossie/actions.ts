@@ -99,6 +99,58 @@ export async function discardFieldAction(formData: FormData): Promise<void> {
   revalidatePath(`/dossie/${dossier_id}`);
 }
 
+export async function reassignFieldAction(formData: FormData): Promise<void> {
+  const supabase = await createServerSupabase();
+  const dossier_id = String(formData.get("dossier_id") ?? "");
+  const from_key = String(formData.get("from_key") ?? "");
+  const to_key = String(formData.get("to_key") ?? "");
+  if (!dossier_id || !from_key || !to_key || from_key === to_key) return;
+
+  // Lê origem
+  const { data: source } = await supabase
+    .from("dossier_fields")
+    .select("value, source_block_ids, status")
+    .eq("dossier_id", dossier_id)
+    .eq("field_key", from_key)
+    .maybeSingle();
+  if (!source || !source.value) return;
+
+  // Lê destino
+  const { data: dest } = await supabase
+    .from("dossier_fields")
+    .select("status")
+    .eq("dossier_id", dossier_id)
+    .eq("field_key", to_key)
+    .maybeSingle();
+  if (!dest) return;
+
+  // Não sobrescreve campo já aprovado
+  if (dest.status === "aprovado") return;
+
+  await supabase
+    .from("dossier_fields")
+    .update({
+      value: source.value,
+      status: "editado",
+      source_block_ids: source.source_block_ids ?? [],
+    })
+    .eq("dossier_id", dossier_id)
+    .eq("field_key", to_key);
+
+  // Limpa origem
+  await supabase
+    .from("dossier_fields")
+    .update({
+      value: null,
+      status: "vazio",
+      source_block_ids: [],
+    })
+    .eq("dossier_id", dossier_id)
+    .eq("field_key", from_key);
+
+  revalidatePath(`/dossie/${dossier_id}`);
+}
+
 export async function updateDossierTitleAction(formData: FormData): Promise<void> {
   const supabase = await createServerSupabase();
   const dossier_id = String(formData.get("dossier_id") ?? "");
@@ -106,6 +158,70 @@ export async function updateDossierTitleAction(formData: FormData): Promise<void
   if (!dossier_id || !title) return;
 
   await supabase.from("dossiers").update({ title }).eq("id", dossier_id);
+  revalidatePath(`/dossie/${dossier_id}`);
+}
+
+export async function saveAsTemplateAction(formData: FormData): Promise<void> {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const dossier_id = String(formData.get("dossier_id") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim() || null;
+  if (!dossier_id || !name) return;
+
+  // Captura todos os campos preenchidos (não-vazios)
+  const { data: fields } = await supabase
+    .from("dossier_fields")
+    .select("field_key, value")
+    .eq("dossier_id", dossier_id)
+    .neq("status", "vazio")
+    .not("value", "is", null);
+
+  const fieldsArr = (fields ?? []).map((f) => ({ field_key: f.field_key, value: f.value }));
+
+  await supabase.from("dossier_templates").insert({
+    barber_id: user.id,
+    name,
+    description,
+    fields: fieldsArr,
+  });
+
+  revalidatePath("/configuracoes/templates-dossie");
+}
+
+export async function applyTemplateAction(formData: FormData): Promise<void> {
+  const supabase = await createServerSupabase();
+  const dossier_id = String(formData.get("dossier_id") ?? "");
+  const template_id = String(formData.get("template_id") ?? "");
+  if (!dossier_id || !template_id) return;
+
+  const { data: tpl } = await supabase
+    .from("dossier_templates")
+    .select("fields")
+    .eq("id", template_id)
+    .maybeSingle();
+  if (!tpl) return;
+
+  const items = (tpl.fields as Array<{ field_key: string; value: string }>) ?? [];
+  for (const f of items) {
+    if (!f.field_key || !f.value) continue;
+    // Não sobrescreve campos já aprovados
+    const { data: existing } = await supabase
+      .from("dossier_fields")
+      .select("status")
+      .eq("dossier_id", dossier_id)
+      .eq("field_key", f.field_key)
+      .maybeSingle();
+    if (existing?.status === "aprovado") continue;
+    await supabase
+      .from("dossier_fields")
+      .update({ value: f.value, status: "editado" })
+      .eq("dossier_id", dossier_id)
+      .eq("field_key", f.field_key);
+  }
+
   revalidatePath(`/dossie/${dossier_id}`);
 }
 

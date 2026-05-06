@@ -1,20 +1,42 @@
 import Link from "next/link";
-import Image from "next/image";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getSignedUrl } from "@/lib/storage";
-import { FadeIn } from "@/app/(app)/_components/FadeIn";
+import { SortableProductGrid } from "./_components/SortableProductGrid";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductsPage() {
-  const supabase = await createServerSupabase();
-  const { data: products } = await supabase
-    .from("barber_products")
-    .select("id, name, photo_path, description, price_brl")
-    .order("name");
+const PAGE_SIZE = 24;
 
+interface PageProps {
+  searchParams: Promise<{ category?: string; page?: string }>;
+}
+
+export default async function ProductsPage({ searchParams }: PageProps) {
+  const { category = "", page: pageRaw = "1" } = await searchParams;
+  const page = Math.max(1, parseInt(pageRaw, 10) || 1);
+  const offset = (page - 1) * PAGE_SIZE;
+  const supabase = await createServerSupabase();
+
+  let query = supabase
+    .from("barber_products")
+    .select("id, name, photo_path, description, price_brl, category, sort_order", { count: "exact" })
+    .order("sort_order", { ascending: true })
+    .order("name");
+  if (category) query = query.eq("category", category);
+
+  // Lista de categorias distintas (sem aplicar filtro pra mostrar todas)
+  const { data: catRows } = await supabase
+    .from("barber_products")
+    .select("category")
+    .not("category", "is", null);
+  const categories = Array.from(new Set((catRows ?? []).map((r) => r.category).filter(Boolean))) as string[];
+
+  const { data: products, count } = await query.range(offset, offset + PAGE_SIZE - 1);
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
+
+  type ProductRow = { id: string; name: string; photo_path: string | null; description: string | null; price_brl: number | null; category: string | null; sort_order: number };
   const enriched = await Promise.all(
-    (products ?? []).map(async (p) => ({
+    ((products ?? []) as ProductRow[]).map(async (p) => ({
       ...p,
       photoUrl: p.photo_path ? await getSignedUrl("barber-assets", p.photo_path, 3600) : null,
     })),
@@ -22,7 +44,7 @@ export default async function ProductsPage() {
 
   return (
     <main className="max-w-6xl mx-auto px-6 lg:px-10 py-10">
-      <header className="flex items-end justify-between mb-8 gap-4">
+      <header className="flex items-end justify-between mb-6 gap-4">
         <div>
           <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.12em" }}>
             Catálogo
@@ -40,6 +62,33 @@ export default async function ProductsPage() {
         </Link>
       </header>
 
+      {categories.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <Link
+            href="/produtos"
+            className={`h-9 px-4 inline-flex items-center rounded-full text-body-sm transition-colors ${
+              !category ? "bg-neutral-900 text-neutral-50" : "bg-surface-card border border-border-subtle text-text-secondary hover:border-border-strong"
+            }`}
+          >
+            Todas
+          </Link>
+          {categories.map((c) => {
+            const active = category === c;
+            return (
+              <Link
+                key={c}
+                href={`/produtos?category=${encodeURIComponent(c)}`}
+                className={`h-9 px-4 inline-flex items-center rounded-full text-body-sm transition-colors ${
+                  active ? "bg-neutral-900 text-neutral-50" : "bg-surface-card border border-border-subtle text-text-secondary hover:border-border-strong"
+                }`}
+              >
+                {c}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
       {enriched.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border-strong p-12 text-center">
           <p className="font-display text-h3 text-text-muted">Catálogo vazio</p>
@@ -54,44 +103,42 @@ export default async function ProductsPage() {
           </Link>
         </div>
       ) : (
-        <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {enriched.map((p, i) => (
-            <FadeIn key={p.id} index={i}>
-              <li><Link
-                href={`/produtos/${p.id}`}
-                className="group block rounded-lg bg-surface-card border border-border-subtle hover:border-primary-300 hover:shadow-2 transition-all overflow-hidden"
+        <SortableProductGrid
+          initial={enriched.map((p) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description,
+            price_brl: p.price_brl,
+            category: p.category,
+            photoUrl: p.photoUrl,
+          }))}
+        />
+      )}
+
+      {totalPages > 1 && (
+        <nav className="mt-8 flex items-center justify-between gap-3">
+          <span className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.08em" }}>
+            Página {page} de {totalPages} · {count} produto(s)
+          </span>
+          <div className="flex gap-2">
+            {page > 1 && (
+              <Link
+                href={`/produtos?${new URLSearchParams({ ...(category && { category }), page: String(page - 1) }).toString()}`}
+                className="h-9 px-3 inline-flex items-center rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors"
               >
-                {p.photoUrl ? (
-                  <Image
-                    src={p.photoUrl}
-                    alt={p.name}
-                    width={400}
-                    height={300}
-                    unoptimized
-                    className="w-full aspect-[4/3] object-cover"
-                  />
-                ) : (
-                  <div className="w-full aspect-[4/3] bg-surface-sunken flex items-center justify-center">
-                    <span className="font-display text-h2 text-text-muted">
-                      {p.name.split(" ").map((s: string) => s[0]).slice(0, 2).join("").toUpperCase()}
-                    </span>
-                  </div>
-                )}
-                <div className="p-4">
-                  <p className="font-display text-h4 group-hover:text-primary-600 transition-colors">{p.name}</p>
-                  {p.description && (
-                    <p className="text-body-sm text-text-muted mt-1 line-clamp-2">{p.description}</p>
-                  )}
-                  {p.price_brl && (
-                    <p className="font-mono text-body-sm mt-2 text-primary-700">
-                      R$ {Number(p.price_brl).toFixed(2).replace(".", ",")}
-                    </p>
-                  )}
-                </div>
-              </Link></li>
-            </FadeIn>
-          ))}
-        </ul>
+                ← Anterior
+              </Link>
+            )}
+            {page < totalPages && (
+              <Link
+                href={`/produtos?${new URLSearchParams({ ...(category && { category }), page: String(page + 1) }).toString()}`}
+                className="h-9 px-3 inline-flex items-center rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors"
+              >
+                Próxima →
+              </Link>
+            )}
+          </div>
+        </nav>
       )}
     </main>
   );

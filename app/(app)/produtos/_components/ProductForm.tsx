@@ -11,6 +11,7 @@ interface ProductFormProps {
     how_to_use?: string | null;
     why_use?: string | null;
     price_brl?: number | null;
+    category?: string | null;
     photoUrl?: string | null;
   };
   submitLabel: string;
@@ -59,14 +60,29 @@ export function ProductForm({ action, initial, submitLabel }: ProductFormProps) 
         />
       </Field>
 
-      <div className="grid sm:grid-cols-[1fr_180px] gap-4">
+      <div className="grid sm:grid-cols-[1fr_180px_180px] gap-4">
         <Field label="Descrição curta">
           <input
             name="description"
             defaultValue={initial?.description ?? ""}
-            placeholder="Pomada efeito matte com fixação média"
+            placeholder="Pomada efeito matte"
             className="h-touch px-4 rounded-md bg-surface-card border border-border-strong w-full focus:border-primary-500 focus:shadow-focus focus:outline-none transition-all"
           />
+        </Field>
+        <Field label="Categoria">
+          <input
+            name="category"
+            defaultValue={initial?.category ?? ""}
+            placeholder="Cabelo, Barba, Skin…"
+            list="category-suggestions"
+            className="h-touch px-4 rounded-md bg-surface-card border border-border-strong w-full focus:border-primary-500 focus:shadow-focus focus:outline-none transition-all"
+          />
+          <datalist id="category-suggestions">
+            <option value="Cabelo" />
+            <option value="Barba" />
+            <option value="Skin" />
+            <option value="Acessório" />
+          </datalist>
         </Field>
         <Field label="Preço (R$)">
           <input

@@ -5,6 +5,8 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { signOutAction } from "../login/actions";
 import { CommandMenu } from "./_components/CommandMenu";
 import { OnboardingTour } from "./_components/OnboardingTour";
+import { NotificationBell } from "./_components/NotificationBell";
+import { getDerivedNotifications } from "@/lib/notifications/derive";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createServerSupabase();
@@ -20,6 +22,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const meta = (user.user_metadata ?? {}) as { full_name?: string };
   const displayName = barber?.full_name ?? meta.full_name ?? user.email?.split("@")[0] ?? "Barbeiro";
   const initials = displayName.split(" ").map((s: string) => s[0]).slice(0, 2).join("").toUpperCase();
+
+  const notifications = await getDerivedNotifications();
 
   return (
     <div className="min-h-screen bg-surface-page">
@@ -37,6 +41,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </nav>
         </div>
         <div className="flex items-center gap-3">
+          <NotificationBell initial={notifications} />
           <CommandMenu />
           <div className="hidden lg:flex flex-col items-end">
             <span className="text-body-sm font-medium">{displayName}</span>

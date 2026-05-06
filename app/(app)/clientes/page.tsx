@@ -7,8 +7,10 @@ import { FadeIn } from "@/app/(app)/_components/FadeIn";
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  searchParams: Promise<{ q?: string; filter?: string }>;
+  searchParams: Promise<{ q?: string; filter?: string; page?: string }>;
 }
+
+const PAGE_SIZE = 30;
 
 const FILTER_LABELS: Record<string, string> = {
   todos: "Todos",
@@ -20,12 +22,14 @@ const FILTER_LABELS: Record<string, string> = {
 };
 
 export default async function ClientsPage({ searchParams }: PageProps) {
-  const { q = "", filter = "todos" } = await searchParams;
+  const { q = "", filter = "todos", page: pageRaw = "1" } = await searchParams;
+  const page = Math.max(1, parseInt(pageRaw, 10) || 1);
+  const offset = (page - 1) * PAGE_SIZE;
   const supabase = await createServerSupabase();
 
   let query = supabase
     .from("clients_with_status")
-    .select("id, full_name, phone, instagram, photo_url, last_visit_at, days_since_visit, client_status, created_at")
+    .select("id, full_name, phone, instagram, photo_url, last_visit_at, days_since_visit, client_status, created_at", { count: "exact" })
     .order("last_visit_at", { ascending: false, nullsFirst: false });
 
   if (filter !== "todos" && filter in FILTER_LABELS) {
@@ -35,7 +39,8 @@ export default async function ClientsPage({ searchParams }: PageProps) {
     query = query.or(`full_name.ilike.%${q}%,phone.ilike.%${q}%,instagram.ilike.%${q}%`);
   }
 
-  const { data: clients } = await query;
+  const { data: clients, count } = await query.range(offset, offset + PAGE_SIZE - 1);
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
   // Conta dossiês por cliente
   const ids = (clients ?? []).map((c) => c.id);
@@ -181,6 +186,32 @@ export default async function ClientsPage({ searchParams }: PageProps) {
             );
           })}
         </ul>
+      )}
+
+      {totalPages > 1 && (
+        <nav className="mt-8 flex items-center justify-between gap-3">
+          <span className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.08em" }}>
+            Página {page} de {totalPages} · {count} cliente(s)
+          </span>
+          <div className="flex gap-2">
+            {page > 1 && (
+              <Link
+                href={`/clientes?${new URLSearchParams({ ...(q && { q }), ...(filter !== "todos" && { filter }), page: String(page - 1) }).toString()}`}
+                className="h-9 px-3 inline-flex items-center rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors"
+              >
+                ← Anterior
+              </Link>
+            )}
+            {page < totalPages && (
+              <Link
+                href={`/clientes?${new URLSearchParams({ ...(q && { q }), ...(filter !== "todos" && { filter }), page: String(page + 1) }).toString()}`}
+                className="h-9 px-3 inline-flex items-center rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors"
+              >
+                Próxima →
+              </Link>
+            )}
+          </div>
+        </nav>
       )}
     </main>
   );

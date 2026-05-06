@@ -5,17 +5,24 @@ import { StatsRow } from "./_components/StatsRow";
 import { ReengagementList } from "./_components/ReengagementList";
 import { AnniversaryList } from "./_components/AnniversaryList";
 import { UpcomingReturns } from "./_components/UpcomingReturns";
+import { PeriodPicker, getPeriodRange } from "./_components/PeriodPicker";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+interface PageProps {
+  searchParams: Promise<{ period?: string }>;
+}
+
+export default async function DashboardPage({ searchParams }: PageProps) {
+  const { period = "this_month" } = await searchParams;
+  const range = getPeriodRange(period);
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   const meta = (user?.user_metadata ?? {}) as { full_name?: string };
   const displayName = meta.full_name ?? user?.email?.split("@")[0] ?? "Barbeiro";
 
   const [stats, reengagement, anniversaries, returns, latest] = await Promise.all([
-    getDashboardStats(),
+    getDashboardStats(range.start, range.end),
     getReengagementList(30),
     getAnniversaryList(),
     getUpcomingReturns(),
@@ -41,6 +48,14 @@ export default async function DashboardPage() {
       </header>
 
       <section className="mb-10">
+        <header className="flex items-end justify-between mb-3 flex-wrap gap-3">
+          <div>
+            <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.1em" }}>
+              Métricas · {range.label.toLowerCase()}
+            </p>
+          </div>
+          <PeriodPicker current={period} />
+        </header>
         <StatsRow {...stats} />
       </section>
 

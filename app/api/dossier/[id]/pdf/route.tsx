@@ -99,6 +99,12 @@ export async function GET(req: Request, ctx: RouteContext) {
     const path = `${user.id}/${id}/dossie-${Date.now()}.pdf`;
     await admin.storage.from("pdfs").upload(path, arrayBuffer, { upsert: false, contentType: "application/pdf" });
     await supabase.from("dossiers").update({ pdf_url: path }).eq("id", id);
+    // Histórico
+    await supabase.from("pdf_versions").insert({
+      dossier_id: id,
+      storage_path: path,
+      generated_by: user.id,
+    });
   }
 
   return new NextResponse(arrayBuffer, {

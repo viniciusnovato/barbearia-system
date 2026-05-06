@@ -96,6 +96,23 @@ export default async function SettingsPage() {
         </form>
       </section>
 
+      {/* Tags */}
+      <section className="mb-10 rounded-2xl bg-surface-card border border-border-subtle p-6">
+        <p className="font-mono text-mono uppercase text-text-muted mb-3" style={{ letterSpacing: "0.1em" }}>
+          Organização
+        </p>
+        <h2 className="font-display text-h3 mb-2">Tags de cliente</h2>
+        <p className="text-body-sm text-text-secondary mb-5">
+          Crie tags livres pra classificar sua base — VIP, Indicação, Cabelo difícil, etc.
+        </p>
+        <Link
+          href="/configuracoes/tags"
+          className="inline-flex h-10 px-4 items-center rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors"
+        >
+          Gerenciar tags →
+        </Link>
+      </section>
+
       {/* Templates de desenho */}
       <section className="mb-10 rounded-2xl bg-surface-card border border-border-subtle p-6">
         <p className="font-mono text-mono uppercase text-text-muted mb-3" style={{ letterSpacing: "0.1em" }}>
@@ -110,8 +127,44 @@ export default async function SettingsPage() {
           href="/configuracoes/templates"
           className="inline-flex h-10 px-4 items-center rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors"
         >
-          Gerenciar templates →
+          Gerenciar templates de desenho →
         </Link>
+      </section>
+
+      {/* Templates de dossiê */}
+      <section className="mb-10 rounded-2xl bg-surface-card border border-border-subtle p-6">
+        <p className="font-mono text-mono uppercase text-text-muted mb-3" style={{ letterSpacing: "0.1em" }}>
+          Templates de dossiê
+        </p>
+        <h2 className="font-display text-h3 mb-2">Modelos de atendimento</h2>
+        <p className="text-body-sm text-text-secondary mb-5">
+          Salve um dossiê preenchido como modelo (ex: "Executivo", "Criativo") e aplique em novos
+          atendimentos pra adiantar campos típicos.
+        </p>
+        <Link
+          href="/configuracoes/templates-dossie"
+          className="inline-flex h-10 px-4 items-center rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors"
+        >
+          Gerenciar templates de dossiê →
+        </Link>
+      </section>
+
+      {/* Export */}
+      <section className="mb-10 rounded-2xl bg-surface-card border border-border-subtle p-6">
+        <p className="font-mono text-mono uppercase text-text-muted mb-3" style={{ letterSpacing: "0.1em" }}>
+          Backup
+        </p>
+        <h2 className="font-display text-h3 mb-2">Exportar lista de clientes</h2>
+        <p className="text-body-sm text-text-secondary mb-5">
+          Baixa um CSV com todos os clientes (nome, contato, status, próximo retorno, total de atendimentos).
+          Abre no Excel ou Google Sheets.
+        </p>
+        <a
+          href="/api/export/clientes"
+          className="inline-flex h-10 px-4 items-center gap-2 rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors"
+        >
+          ⬇ Baixar CSV
+        </a>
       </section>
 
       {/* Tutorial */}

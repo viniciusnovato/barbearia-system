@@ -7,6 +7,8 @@ import { FieldRow } from "./FieldRow";
 import { TranscriptPanel } from "./TranscriptPanel";
 import { ProductsSection } from "./ProductsSection";
 import { ReferencesSection, type ReferenceAsset } from "./ReferencesSection";
+import { PdfHistory } from "./PdfHistory";
+import { DossierTemplatesMenu } from "./DossierTemplatesMenu";
 import { finalizeDossierAction, updateDossierTitleAction } from "../../actions";
 
 interface DossierField {
@@ -41,7 +43,7 @@ interface Audio {
 
 interface Props {
   dossier: { id: string; title: string; status: string; scheduled_date: string; pdf_url: string | null };
-  client: { id: string; full_name: string };
+  client: { id: string; full_name: string; phone: string | null };
   activeSection: string;
   fields: DossierField[];
   blocks: Block[];
@@ -51,9 +53,11 @@ interface Props {
   catalog: { id: string; name: string; description: string | null; photoUrl: string | null; price_brl: number | null }[];
   dossierProducts: { id: string; product_id: string | null; purchased: boolean; catalog: { id: string; name: string; description: string | null; price_brl: number | null; photoUrl: string | null } | null }[];
   references: { referencia_corte: ReferenceAsset[]; referencia_barba: ReferenceAsset[] };
+  pdfHistory: { id: string; storage_path: string; generated_at: string }[];
+  dossierTemplates: { id: string; name: string; description: string | null; fieldCount: number }[];
 }
 
-export function DossierEditor({ dossier, client, activeSection, fields, blocks, audios, progress, missingRequiredCount, catalog, dossierProducts, references }: Props) {
+export function DossierEditor({ dossier, client, activeSection, fields, blocks, audios, progress, missingRequiredCount, catalog, dossierProducts, references, pdfHistory, dossierTemplates }: Props) {
   const [section, setSection] = useState<SectionId>(activeSection as SectionId);
   const [hoveredFieldKey, setHoveredFieldKey] = useState<string | null>(null);
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
@@ -164,7 +168,10 @@ export function DossierEditor({ dossier, client, activeSection, fields, blocks, 
             )}
           </div>
 
-          <StatusBadge status={dossier.status} />
+          <div className="flex items-center gap-2">
+            {!isFinalized && <DossierTemplatesMenu dossierId={dossier.id} templates={dossierTemplates} />}
+            <StatusBadge status={dossier.status} />
+          </div>
         </header>
 
         {/* Cabeçalho da seção */}
@@ -217,6 +224,21 @@ export function DossierEditor({ dossier, client, activeSection, fields, blocks, 
                 />
               );
             })}
+
+            {/* Histórico de PDFs na seção finalização */}
+            {section === "finalizacao" && (
+              <section className="rounded-lg bg-surface-card border border-border-subtle p-5">
+                <p className="font-mono text-mono uppercase text-text-secondary mb-3" style={{ letterSpacing: "0.08em" }}>
+                  Histórico de PDFs
+                </p>
+                <PdfHistory
+                  dossierId={dossier.id}
+                  clientName={client.full_name}
+                  clientPhone={client.phone}
+                  versions={pdfHistory}
+                />
+              </section>
+            )}
 
             {/* Referências visuais nas seções corte e barba */}
             {section === "corte" && (

@@ -5,9 +5,17 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createBrowserSupabase } from "@/lib/supabase/client";
 import { VersionCompare } from "./VersionCompare";
+import { duplicateVersionAction } from "../actions";
 
-type Tool = "pen" | "marker" | "eraser" | "arrow" | "circle" | "line";
-interface Stroke { tool: Tool; color: string; size: number; points: { x: number; y: number; p: number }[] }
+type Tool = "pen" | "marker" | "eraser" | "arrow" | "circle" | "line" | "text";
+interface Stroke {
+  tool: Tool;
+  color: string;
+  size: number;
+  points: { x: number; y: number; p: number }[];
+  /** Apenas para tool="text" */
+  text?: string;
+}
 
 interface DrawingTemplate {
   id: string;
@@ -146,6 +154,28 @@ export function Annotator({ assetId, dossierId, imageUrl, versions, templates }:
 
   function drawStroke(ctx: CanvasRenderingContext2D, s: Stroke) {
     if (s.points.length < 1) return;
+
+    // Texto: posição = primeiro ponto, conteúdo em s.text
+    if (s.tool === "text" && s.text) {
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = s.color;
+      ctx.globalAlpha = 1;
+      const fontPx = Math.max(20, s.size * 6);
+      ctx.font = `500 ${fontPx}px "Helvetica Neue", Arial, sans-serif`;
+      ctx.textBaseline = "top";
+      const p = s.points[0];
+      // Background para legibilidade
+      const m = ctx.measureText(s.text);
+      const padX = 6, padY = 4;
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.fillRect(p.x - padX, p.y - padY, m.width + padX * 2, fontPx + padY * 2);
+      ctx.restore();
+      ctx.fillStyle = s.color;
+      ctx.fillText(s.text, p.x, p.y);
+      return;
+    }
+
     ctx.lineCap = "round"; ctx.lineJoin = "round";
     if (s.tool === "eraser") { ctx.globalCompositeOperation = "destination-out"; ctx.strokeStyle = "#000"; ctx.globalAlpha = 1; }
     else { ctx.globalCompositeOperation = "source-over"; ctx.strokeStyle = s.color; ctx.globalAlpha = s.tool === "marker" ? 0.32 : 1; }
@@ -196,6 +226,23 @@ export function Annotator({ assetId, dossierId, imageUrl, versions, templates }:
   function handleDown(e: React.PointerEvent<HTMLCanvasElement>) {
     const r = canvasRef.current!.getBoundingClientRect();
     pointersRef.current.set(e.pointerId, { x: e.clientX - r.left, y: e.clientY - r.top, type: e.pointerType });
+
+    // Tool=text: abre prompt e cria stroke
+    if (tool === "text") {
+      const txt = window.prompt("Texto:", "")?.trim();
+      if (txt) {
+        const pt = localPoint(e);
+        strokesRef.current = [
+          ...strokesRef.current,
+          { tool: "text", color, size: 4, points: [pt], text: txt },
+        ];
+        redoStackRef.current = [];
+        bumpVersion();
+        redraw();
+      }
+      pointersRef.current.delete(e.pointerId);
+      return;
+    }
 
     // 2 dedos = pinch (NÃO desenha)
     if (pointersRef.current.size === 2) {
@@ -502,7 +549,7 @@ export function Annotator({ assetId, dossierId, imageUrl, versions, templates }:
             <p className="text-caption text-text-muted px-2">Nenhuma versão salva ainda.</p>
           ) : (
             versions.map((v) => (
-              <div key={v.id} className="flex items-center gap-2 p-2 rounded-md bg-surface-card">
+              <div key={v.id} className="group flex items-center gap-2 p-2 rounded-md bg-surface-card">
                 {v.previewUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={v.previewUrl} alt="" className="size-12 rounded-md object-cover" />
@@ -515,6 +562,18 @@ export function Annotator({ assetId, dossierId, imageUrl, versions, templates }:
                     {new Date(v.createdAt).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
+                <form action={duplicateVersionAction}>
+                  <input type="hidden" name="version_id" value={v.id} />
+                  <input type="hidden" name="dossier_id" value={dossierId} />
+                  <input type="hidden" name="asset_id" value={assetId} />
+                  <button
+                    type="submit"
+                    title="Duplicar versão"
+                    className="size-7 rounded-md inline-flex items-center justify-center text-text-muted hover:bg-surface-sunken hover:text-text-primary transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
+                </form>
               </div>
             ))
           )}
@@ -544,6 +603,7 @@ function Toolbar({ tool, setTool, color, setColor, onUndo, onRedo, canUndo, canR
     { id: "arrow", label: "Seta", svg: <path d="M5 19L19 5M19 5h-7M19 5v7" /> },
     { id: "circle", label: "Círculo", svg: <circle cx="12" cy="12" r="8" /> },
     { id: "line", label: "Linha", svg: <path d="M5 19L19 5" /> },
+    { id: "text", label: "Texto", svg: <><path d="M5 5h14M12 5v14M9 19h6" /></> },
   ];
   return (
     <div className="bg-surface-sunken border border-border-subtle rounded-lg p-2 flex flex-col gap-1.5">

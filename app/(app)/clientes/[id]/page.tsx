@@ -5,6 +5,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { getSignedUrl } from "@/lib/storage";
 import { createDossierAction } from "../../dossie/actions";
 import { NextReturnCard } from "./_components/NextReturnCard";
+import { ClientTagPicker } from "./_components/ClientTagPicker";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,12 @@ export default async function ClientProfilePage({ params }: PageProps) {
     .select("id, title, scheduled_date, status, finalized_at, summary_done")
     .eq("client_id", id)
     .order("scheduled_date", { ascending: false });
+
+  // Tags
+  const [{ data: allTags }, { data: clientTags }] = await Promise.all([
+    supabase.from("tags").select("id, name, color").order("name"),
+    supabase.from("client_tags").select("tag_id").eq("client_id", id),
+  ]);
 
   // Galeria de fotos do cliente (independente de dossiê)
   const { data: clientGallery } = await supabase
@@ -140,10 +147,20 @@ export default async function ClientProfilePage({ params }: PageProps) {
         </div>
       </header>
 
+      {/* Tags */}
+      <div className="mb-4">
+        <ClientTagPicker
+          clientId={id}
+          allTags={(allTags ?? []).map((t) => ({ id: t.id, name: t.name, color: t.color }))}
+          selectedIds={(clientTags ?? []).map((ct) => ct.tag_id)}
+        />
+      </div>
+
       {/* Próximo retorno */}
       <div className="mb-4">
         <NextReturnCard
           clientId={id}
+          clientName={client.full_name}
           initialDate={client.next_return_at as string | null}
           initialNote={client.next_return_note as string | null}
         />

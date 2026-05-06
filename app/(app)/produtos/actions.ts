@@ -35,12 +35,13 @@ export async function createProductAction(formData: FormData): Promise<void> {
   const description = emptyToNull(formData.get("description"));
   const how_to_use = emptyToNull(formData.get("how_to_use"));
   const why_use = emptyToNull(formData.get("why_use"));
+  const category = emptyToNull(formData.get("category"));
   const priceStr = String(formData.get("price_brl") ?? "").trim();
   const price_brl = priceStr ? Number(priceStr.replace(",", ".")) : null;
 
   const { data: product, error } = await supabase
     .from("barber_products")
-    .insert({ barber_id: user.id, name, description, how_to_use, why_use, price_brl })
+    .insert({ barber_id: user.id, name, description, how_to_use, why_use, category, price_brl })
     .select("id")
     .single();
   if (error || !product) return;
@@ -72,6 +73,7 @@ export async function updateProductAction(formData: FormData): Promise<void> {
     description: emptyToNull(formData.get("description")),
     how_to_use: emptyToNull(formData.get("how_to_use")),
     why_use: emptyToNull(formData.get("why_use")),
+    category: emptyToNull(formData.get("category")),
     price_brl: priceStr ? Number(priceStr.replace(",", ".")) : null,
   };
 
@@ -84,6 +86,23 @@ export async function updateProductAction(formData: FormData): Promise<void> {
   await supabase.from("barber_products").update(updates).eq("id", id);
   revalidatePath("/produtos");
   redirect(`/produtos`);
+}
+
+export async function reorderProductsAction(orderedIds: string[]): Promise<void> {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  // Aplica sort_order conforme a ordem recebida
+  await Promise.all(
+    orderedIds.map((id, idx) =>
+      supabase
+        .from("barber_products")
+        .update({ sort_order: idx })
+        .eq("id", id)
+        .eq("barber_id", user.id),
+    ),
+  );
+  revalidatePath("/produtos");
 }
 
 export async function deleteProductAction(formData: FormData): Promise<void> {

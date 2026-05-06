@@ -36,6 +36,7 @@ export default async function EditProductPage({ params }: PageProps) {
           description: product.description,
           how_to_use: product.how_to_use,
           why_use: product.why_use,
+          category: product.category,
           price_brl: product.price_brl,
           photoUrl: photoUrl ?? null,
         }}

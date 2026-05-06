@@ -3,14 +3,16 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { setNextReturnAction } from "../../actions";
+import { buildGoogleCalendarUrl } from "@/lib/calendar/google";
 
 interface Props {
   clientId: string;
+  clientName: string;
   initialDate: string | null;
   initialNote: string | null;
 }
 
-export function NextReturnCard({ clientId, initialDate, initialNote }: Props) {
+export function NextReturnCard({ clientId, clientName, initialDate, initialNote }: Props) {
   const [editing, setEditing] = useState(false);
   const [date, setDate] = useState(initialDate ? initialDate.slice(0, 10) : "");
   const [note, setNote] = useState(initialNote ?? "");
@@ -54,12 +56,22 @@ export function NextReturnCard({ clientId, initialDate, initialNote }: Props) {
   })();
 
   if (!editing) {
+    const gcalUrl = initialDate
+      ? buildGoogleCalendarUrl({
+          title: `Visagismo · ${clientName}`,
+          description: initialNote ?? "Atendimento de retorno",
+          start: initialDate,
+          durationMinutes: 60,
+        })
+      : null;
+
     return (
-      <div
-        onClick={() => setEditing(true)}
-        className="flex items-center gap-3 px-4 py-2.5 rounded-md bg-status-suggested-bg text-status-suggested-fg ring-1 ring-inset ring-status-suggested-ring cursor-pointer hover:brightness-95 transition-all"
-      >
-        <span className="text-body-sm flex-1">
+      <div className="flex items-center gap-3 px-4 py-2.5 rounded-md bg-status-suggested-bg text-status-suggested-fg ring-1 ring-inset ring-status-suggested-ring transition-all">
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="text-body-sm flex-1 text-left hover:brightness-95 transition-all cursor-pointer"
+        >
           {display ? (
             <>
               📅 Próximo retorno: <strong>{display.date}</strong>
@@ -71,10 +83,29 @@ export function NextReturnCard({ clientId, initialDate, initialNote }: Props) {
           ) : (
             "📅 Agendar próximo retorno"
           )}
-        </span>
-        <span className="text-caption text-status-suggested-fg/70 font-mono uppercase" style={{ letterSpacing: "0.06em" }}>
+        </button>
+        {gcalUrl && (
+          <a
+            href={gcalUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-surface-card text-text-secondary text-caption font-medium hover:text-text-primary transition-colors"
+            title="Adicionar ao Google Calendar"
+          >
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden>
+              <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/>
+            </svg>
+            Google Calendar
+          </a>
+        )}
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="text-caption text-status-suggested-fg/70 font-mono uppercase hover:text-status-suggested-fg transition-colors"
+          style={{ letterSpacing: "0.06em" }}
+        >
           editar
-        </span>
+        </button>
       </div>
     );
   }

@@ -1,10 +1,11 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 
-/** Dados crus dos cards de stats do dashboard. */
-export async function getDashboardStats() {
+/** Dados crus dos cards de stats do dashboard, parametrizados por janela. */
+export async function getDashboardStats(periodStart?: string, periodEnd?: string) {
   const supabase = await createServerSupabase();
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const startISO = periodStart ?? new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const endISO = periodEnd ?? new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
 
   const [
     { count: total },
@@ -13,8 +14,8 @@ export async function getDashboardStats() {
     { data: clientesAtivos },
   ] = await Promise.all([
     supabase.from("clients").select("*", { count: "exact", head: true }),
-    supabase.from("clients").select("*", { count: "exact", head: true }).gte("created_at", monthStart),
-    supabase.from("dossiers").select("id, finalized_at, products(purchased, barber_products(price_brl))").eq("status", "finalizado").gte("finalized_at", monthStart),
+    supabase.from("clients").select("*", { count: "exact", head: true }).gte("created_at", startISO).lt("created_at", endISO),
+    supabase.from("dossiers").select("id, finalized_at, products(purchased, barber_products(price_brl))").eq("status", "finalizado").gte("finalized_at", startISO).lt("finalized_at", endISO),
     supabase.from("clients").select("id, created_at, last_visit_at").not("last_visit_at", "is", null).gte("last_visit_at", new Date(Date.now() - 30 * 86400_000).toISOString()),
   ]);
 
