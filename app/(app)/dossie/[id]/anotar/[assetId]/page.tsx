@@ -19,15 +19,29 @@ export default async function AnnotatePage({ params }: PageProps) {
 
   const imageUrl = await getSignedUrl(asset.bucket, asset.storage_path, 3600);
 
-  const { data: versions } = await supabase
-    .from("ipad_annotations")
-    .select("id, version_name, preview_path, created_at")
-    .eq("asset_id", assetId)
-    .order("created_at", { ascending: false });
+  const [{ data: versions }, { data: templates }] = await Promise.all([
+    supabase
+      .from("ipad_annotations")
+      .select("id, version_name, preview_path, created_at")
+      .eq("asset_id", assetId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("drawing_templates")
+      .select("id, name, vector_data, is_default")
+      .order("is_default", { ascending: false })
+      .order("name"),
+  ]);
 
   const versionsWithUrls = await Promise.all(
     (versions ?? []).map(async (v) => ({ ...v, previewUrl: v.preview_path ? await getSignedUrl("annotations", v.preview_path, 3600) : null })),
   );
+
+  const drawingTemplates = (templates ?? []).map((t) => ({
+    id: t.id as string,
+    name: t.name as string,
+    vectorData: t.vector_data as { strokes: Array<{ tool: string; color: string; size: number; points: Array<{ x: number; y: number; p?: number }> }> } | null,
+    isDefault: !!t.is_default,
+  }));
 
   return (
     <main className="px-4 lg:px-8 py-6">
@@ -39,6 +53,7 @@ export default async function AnnotatePage({ params }: PageProps) {
         dossierId={id}
         imageUrl={imageUrl ?? ""}
         versions={versionsWithUrls.map((v) => ({ id: v.id, name: v.version_name, previewUrl: v.previewUrl, createdAt: v.created_at }))}
+        templates={drawingTemplates}
       />
     </main>
   );

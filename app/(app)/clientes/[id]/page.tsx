@@ -28,6 +28,20 @@ export default async function ClientProfilePage({ params }: PageProps) {
     .eq("client_id", id)
     .order("scheduled_date", { ascending: false });
 
+  // Galeria de fotos do cliente (independente de dossiê)
+  const { data: clientGallery } = await supabase
+    .from("client_photos")
+    .select("id, angle, storage_path, caption")
+    .eq("client_id", id)
+    .order("created_at", { ascending: false })
+    .limit(6);
+  const galleryEnriched = await Promise.all(
+    (clientGallery ?? []).map(async (g) => ({
+      ...g,
+      url: await getSignedUrl("client-photos", g.storage_path, 3600),
+    })),
+  );
+
   // Imagens por dossiê (foto_cliente + marcacao_ipad)
   const dossierIds = (dossiers ?? []).map((d) => d.id);
   const { data: assets } = dossierIds.length
@@ -109,9 +123,12 @@ export default async function ClientProfilePage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <Link href={`/clientes/${id}/editar`} className="h-touch px-4 inline-flex items-center rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors">
             Editar
+          </Link>
+          <Link href={`/clientes/${id}/fotos`} className="h-touch px-4 inline-flex items-center gap-2 rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors">
+            📷 Galeria
           </Link>
           <form action={createDossierAction}>
             <input type="hidden" name="client_id" value={id} />
@@ -140,6 +157,30 @@ export default async function ClientProfilePage({ params }: PageProps) {
           </div>
         )}
       </div>
+
+      {/* Mini-galeria */}
+      {galleryEnriched.length > 0 && (
+        <section className="mb-10">
+          <header className="flex items-end justify-between mb-3">
+            <p className="font-mono text-mono uppercase text-text-muted" style={{ letterSpacing: "0.1em" }}>
+              Galeria · {galleryEnriched.length} foto{galleryEnriched.length === 1 ? "" : "s"}
+            </p>
+            <Link href={`/clientes/${id}/fotos`} className="text-body-sm text-primary-600 hover:underline">
+              Ver todas →
+            </Link>
+          </header>
+          <ul className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            {galleryEnriched.map((g) => (
+              <li key={g.id} className="aspect-square rounded-md overflow-hidden bg-neutral-200">
+                {g.url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={g.url} alt={g.caption ?? g.angle} className="w-full h-full object-cover" />
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Notas */}
       {client.notes && (

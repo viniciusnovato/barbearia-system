@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getSignedUrl } from "@/lib/storage";
+import { FadeIn } from "@/app/(app)/_components/FadeIn";
 
 export const dynamic = "force-dynamic";
 
@@ -54,9 +55,9 @@ export default async function ProductsPage() {
         </div>
       ) : (
         <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {enriched.map((p) => (
-            <li key={p.id}>
-              <Link
+          {enriched.map((p, i) => (
+            <FadeIn key={p.id} index={i}>
+              <li><Link
                 href={`/produtos/${p.id}`}
                 className="group block rounded-lg bg-surface-card border border-border-subtle hover:border-primary-300 hover:shadow-2 transition-all overflow-hidden"
               >
@@ -87,8 +88,8 @@ export default async function ProductsPage() {
                     </p>
                   )}
                 </div>
-              </Link>
-            </li>
+              </Link></li>
+            </FadeIn>
           ))}
         </ul>
       )}

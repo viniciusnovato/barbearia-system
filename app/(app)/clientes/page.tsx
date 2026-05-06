@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getSignedUrl } from "@/lib/storage";
+import { FadeIn } from "@/app/(app)/_components/FadeIn";
 
 export const dynamic = "force-dynamic";
 
@@ -144,12 +145,12 @@ export default async function ClientsPage({ searchParams }: PageProps) {
         </div>
       ) : (
         <ul className="flex flex-col gap-1.5">
-          {enriched.map((c) => {
+          {enriched.map((c, i) => {
             const initials = c.full_name.split(" ").map((s: string) => s[0]).slice(0, 2).join("").toUpperCase();
             const status = (c.client_status as string) ?? "novo";
             return (
-              <li key={c.id}>
-                <Link
+              <FadeIn key={c.id} index={i}>
+                <li><Link
                   href={`/clientes/${c.id}`}
                   className="group flex items-center gap-3 px-3 py-2.5 rounded-md bg-surface-card border border-border-subtle hover:border-border-strong hover:shadow-1 transition-all"
                 >
@@ -175,8 +176,8 @@ export default async function ClientsPage({ searchParams }: PageProps) {
                     </div>
                     <ClientStatusBadge status={status} />
                   </div>
-                </Link>
-              </li>
+                </Link></li>
+              </FadeIn>
             );
           })}
         </ul>

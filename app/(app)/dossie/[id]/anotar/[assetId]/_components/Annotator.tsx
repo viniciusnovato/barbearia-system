@@ -8,6 +8,13 @@ import { createBrowserSupabase } from "@/lib/supabase/client";
 type Tool = "pen" | "marker" | "eraser" | "arrow" | "circle" | "line";
 interface Stroke { tool: Tool; color: string; size: number; points: { x: number; y: number; p: number }[] }
 
+interface DrawingTemplate {
+  id: string;
+  name: string;
+  vectorData: { strokes: Array<{ tool: string; color: string; size: number; points: Array<{ x: number; y: number; p?: number }> }> } | null;
+  isDefault: boolean;
+}
+
 const COLORS = ["#A03A1B", "#8E6A30", "#535B89", "#4F8C3F", "#FAFAF7"];
 const ZOOM_MIN = 0.25;
 const ZOOM_MAX = 8;
@@ -17,9 +24,10 @@ interface Props {
   dossierId: string;
   imageUrl: string;
   versions: { id: string; name: string; previewUrl: string | null; createdAt: string }[];
+  templates: DrawingTemplate[];
 }
 
-export function Annotator({ assetId, dossierId, imageUrl, versions }: Props) {
+export function Annotator({ assetId, dossierId, imageUrl, versions, templates }: Props) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -49,6 +57,7 @@ export function Annotator({ assetId, dossierId, imageUrl, versions }: Props) {
   const [versionName, setVersionName] = useState("Análise inicial");
   const [saving, setSaving] = useState(false);
   const [hand, setHand] = useState<"r" | "l">("r");
+  const [showTemplates, setShowTemplates] = useState(false);
 
   useEffect(() => {
     const img = new Image();
@@ -295,6 +304,29 @@ export function Annotator({ assetId, dossierId, imageUrl, versions }: Props) {
     }
   }
 
+  function applyTemplate(t: DrawingTemplate) {
+    const img = imgRef.current;
+    if (!img || !t.vectorData?.strokes) return;
+    const w = img.naturalWidth;
+    const h = img.naturalHeight;
+    const newStrokes: Stroke[] = t.vectorData.strokes
+      .filter((s) => ["pen", "marker", "eraser", "arrow", "circle", "line"].includes(s.tool))
+      .map((s) => ({
+        tool: s.tool as Tool,
+        color: s.color || COLORS[2],
+        size: s.size || 3,
+        points: s.points.map((p) => ({ x: p.x * w, y: p.y * h, p: p.p ?? 1 })),
+      }));
+    strokesRef.current = [...strokesRef.current, ...newStrokes];
+    redoStackRef.current = [];
+    bumpVersion();
+    redraw();
+    setShowTemplates(false);
+    toast.success(`Template "${t.name}" aplicado`, {
+      description: "Edite ou apague qualquer linha como se você tivesse desenhado.",
+    });
+  }
+
   function undo() {
     if (strokesRef.current.length === 0) return;
     const last = strokesRef.current[strokesRef.current.length - 1];
@@ -367,7 +399,41 @@ export function Annotator({ assetId, dossierId, imageUrl, versions }: Props) {
             className="font-display text-h4 px-2 py-1 -ml-1 rounded-md border border-transparent hover:border-border-subtle focus:border-primary-500 focus:outline-none transition-colors"
           />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {templates.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setShowTemplates((s) => !s)}
+                className="h-9 px-3 rounded-md border border-border-strong text-body-sm hover:bg-surface-sunken transition-colors inline-flex items-center gap-1.5"
+                title="Aplicar template anatômico"
+              >
+                ✦ Templates
+              </button>
+              {showTemplates && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowTemplates(false)} />
+                  <div className="absolute right-0 top-11 z-20 w-64 rounded-lg bg-surface-card border border-border-strong shadow-3 overflow-hidden">
+                    <p className="font-mono text-mono uppercase text-text-muted px-3 pt-3 pb-1.5" style={{ letterSpacing: "0.1em" }}>
+                      Anatômicos
+                    </p>
+                    {templates.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => applyTemplate(t)}
+                        className="w-full text-left px-3 py-2.5 text-body-sm hover:bg-surface-sunken transition-colors flex items-center justify-between gap-2"
+                      >
+                        <span>{t.name}</span>
+                        {t.isDefault && (
+                          <span className="font-mono text-caption text-text-muted" style={{ letterSpacing: "0.06em" }}>default</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           <span className="inline-flex items-center gap-1 p-1 bg-surface-sunken rounded-full text-caption">
             <button onClick={() => setHand("r")} className={`px-3 h-7 rounded-full ${hand === "r" ? "bg-surface-card shadow-1" : "text-text-muted"}`}>Destra</button>
             <button onClick={() => setHand("l")} className={`px-3 h-7 rounded-full ${hand === "l" ? "bg-surface-card shadow-1" : "text-text-muted"}`}>Canhota</button>

@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { THEME_COOKIE, type Theme, isTheme } from "@/lib/theme/cookie";
 
 export async function uploadLogoAction(formData: FormData): Promise<void> {
   const supabase = await createServerSupabase();
@@ -66,4 +68,21 @@ export async function completeTourAction(): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   await supabase.from("barbers").update({ tour_completed_at: new Date().toISOString() }).eq("id", user.id);
+}
+
+export async function setThemeAction(theme: Theme): Promise<void> {
+  if (!isTheme(theme)) return;
+  const cookieStore = await cookies();
+  cookieStore.set(THEME_COOKIE, theme, {
+    httpOnly: false,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 365,
+    path: "/",
+  });
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    await supabase.from("barbers").update({ theme_preference: theme }).eq("id", user.id);
+  }
+  revalidatePath("/", "layout");
 }

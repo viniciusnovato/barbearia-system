@@ -1,7 +1,8 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
-import Image from "next/image";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getSignedUrl } from "@/lib/storage";
+import { THEME_COOKIE, isTheme, type Theme } from "@/lib/theme/cookie";
 import {
   uploadLogoAction,
   removeLogoAction,
@@ -9,6 +10,7 @@ import {
   resetTourAction,
 } from "./actions";
 import { LogoUploader } from "./_components/LogoUploader";
+import { ThemeSwitcher } from "../_components/ThemeSwitcher";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +19,9 @@ export default async function SettingsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   const { data: barber } = await supabase.from("barbers").select("*").eq("id", user?.id ?? "").maybeSingle();
   const logoUrl = barber?.logo_path ? await getSignedUrl("barber-assets", barber.logo_path, 3600) : null;
+  const cookieStore = await cookies();
+  const cookieTheme = cookieStore.get(THEME_COOKIE)?.value;
+  const initialTheme: Theme = isTheme(cookieTheme) ? cookieTheme : (barber?.theme_preference as Theme | undefined) ?? "light";
 
   return (
     <main className="max-w-3xl mx-auto px-6 lg:px-10 py-10">
@@ -24,6 +29,18 @@ export default async function SettingsPage() {
         Configurações
       </p>
       <h1 className="font-display text-h1 mt-2 mb-8">Sua conta</h1>
+
+      {/* Tema */}
+      <section className="mb-10 rounded-2xl bg-surface-card border border-border-subtle p-6">
+        <p className="font-mono text-mono uppercase text-text-muted mb-3" style={{ letterSpacing: "0.1em" }}>
+          Aparência
+        </p>
+        <h2 className="font-display text-h3 mb-2">Tema</h2>
+        <p className="text-body-sm text-text-secondary mb-5">
+          Modo escuro recomendado para uso em iPad durante atendimento noturno. "Automático" segue a preferência do seu sistema.
+        </p>
+        <ThemeSwitcher initial={initialTheme} />
+      </section>
 
       {/* Logo */}
       <section className="mb-10 rounded-2xl bg-surface-card border border-border-subtle p-6">
