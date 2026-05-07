@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0B1220" />
+<title>Visagismo · Design System v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  body {
+    padding: 24px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+  }
+
+  section { margin-bottom: 48px; }
+
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding-bottom: 12px; margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    flex-wrap: wrap; gap: 8px;
+  }
+  .section-head h2 { font-size: var(--fs-h2); }
+  .section-head .meta { font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--text-muted); }
+
+  .row {
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 16px;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 16px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    gap: 12px;
+  }
+
+  /* Swatch */
+  .swatch { display: flex; flex-direction: column; gap: 6px; }
+  .swatch__chip {
+    height: 64px; border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+  }
+  .swatch__name { font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--text-secondary); }
+  .swatch__hex { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--text-muted); }
+
+  /* Botões */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 40px; padding: 0 16px; font-family: var(--font-sans); font-weight: 500;
+    border-radius: var(--radius-md); border: 1px solid transparent;
+    font-size: var(--fs-body-sm);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn--primary { background: var(--primary-700); color: var(--text-on-primary); }
+  @media (hover: hover) { .btn--primary:hover { background: var(--primary-800); box-shadow: var(--shadow-2); } }
+  .btn--secondary { background: var(--surface-card); color: var(--text-primary); border-color: var(--border-strong); }
+  @media (hover: hover) { .btn--secondary:hover { background: var(--surface-sunken); border-color: var(--primary-500); } }
+  .btn--accent { background: var(--accent-500); color: var(--text-on-accent); font-weight: 600; }
+  @media (hover: hover) { .btn--accent:hover { background: var(--accent-400); box-shadow: 0 0 20px -4px rgba(6, 182, 212, 0.5); } }
+  .btn--destructive { background: var(--danger); color: var(--text-on-primary); }
+  @media (hover: hover) { .btn--destructive:hover { filter: brightness(1.1); } }
+  .btn--ghost { color: var(--text-secondary); }
+  @media (hover: hover) { .btn--ghost:hover { background: var(--surface-sunken); color: var(--text-primary); } }
+  .btn--lg { height: 44px; padding: 0 20px; font-size: var(--fs-body); }
+  .btn--sm { height: 32px; padding: 0 12px; font-size: var(--fs-body-sm); border-radius: var(--radius-sm); }
+  .btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+  .btn[disabled]:hover { transform: none !important; box-shadow: none !important; }
+
+  /* Card base */
+  .card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px;
+  }
+
+  /* Field card */
+  .field-card {
+    background: var(--surface-card);
+    border-radius: var(--radius-md);
+    box-shadow: 0 0 0 1px var(--border-subtle) inset;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (hover: hover) {
+    .field-card:hover { box-shadow: 0 0 0 1px var(--primary-500) inset, var(--shadow-2); }
+  }
+  .field-card[data-status="sugerido"] { box-shadow: 0 0 0 1px var(--status-suggested-ring) inset; }
+  .field-card[data-status="editado"]  { box-shadow: 0 0 0 1px var(--status-edited-ring) inset; }
+  .field-card[data-status="aprovado"] { box-shadow: 0 0 0 1px var(--status-approved-ring) inset; }
+  .field-card[data-status="conflito"] { box-shadow: 0 0 0 1px var(--status-conflict-ring) inset; }
+  @media (hover: hover) {
+    .field-card[data-status="sugerido"]:hover { box-shadow: 0 0 0 2px var(--accent-500) inset, 0 0 24px -4px rgba(6, 182, 212, 0.4); }
+  }
+  .field-card__head { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 16px 4px; gap: 12px; }
+  .field-card__label { font-family: var(--font-mono); font-size: var(--fs-mono); text-transform: uppercase; letter-spacing: var(--tracking-caps); color: var(--text-muted); }
+  .field-card__value { padding: 0 16px 14px; }
+
+  /* Pílula de status */
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 22px; padding: 0 8px;
+    border-radius: var(--radius-full);
+    font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: var(--tracking-caps);
+    box-shadow: inset 0 0 0 1px transparent;
+    cursor: default;
+  }
+  .pill__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.85; }
+  .pill--vazio    { background: var(--status-empty-bg);    color: var(--status-empty-fg);    box-shadow: inset 0 0 0 1px var(--status-empty-ring); }
+  .pill--sugerido { background: var(--status-suggested-bg); color: var(--status-suggested-fg); box-shadow: inset 0 0 0 1px var(--status-suggested-ring); }
+  .pill--editado  { background: var(--status-edited-bg);   color: var(--status-edited-fg);   box-shadow: inset 0 0 0 1px var(--status-edited-ring); }
+  .pill--aprovado { background: var(--status-approved-bg); color: var(--status-approved-fg); box-shadow: inset 0 0 0 1px var(--status-approved-ring); }
+  .pill--conflito { background: var(--status-conflict-bg); color: var(--status-conflict-fg); box-shadow: inset 0 0 0 1px var(--status-conflict-ring); }
+
+  /* Recorder */
+  .recorder {
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .recorder__head {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .recorder__phase {
+    display: flex; align-items: center; gap: 12px;
+    font-family: var(--font-mono); font-size: var(--fs-mono);
+    text-transform: uppercase; color: var(--text-secondary);
+    letter-spacing: var(--tracking-caps);
+  }
+  .recorder__time {
+    font-family: var(--font-mono); font-size: var(--fs-h3);
+    font-variant-numeric: tabular-nums; color: var(--text-primary);
+  }
+  .live-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .live-dot--rec { background: var(--danger); position: relative; }
+  .live-dot--rec::before { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--danger); animation: ds-pulse-ring 1.4s var(--ease-out) infinite; }
+  .live-dot--proc { background: var(--accent-500); position: relative; }
+  .live-dot--proc::before { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--accent-500); animation: ds-pulse-ring 1.4s var(--ease-out) infinite; }
+
+  /* Topbar */
+  .toggle-theme {
+    position: fixed; top: 12px; right: 12px;
+    height: 36px; padding: 0 14px;
+    font-family: var(--font-mono); font-size: var(--fs-mono);
+    background: var(--surface-card); color: var(--text-primary);
+    border: 1px solid var(--border-strong); border-radius: var(--radius-md);
+    cursor: pointer; z-index: 999;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .topbar {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 32px;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .topbar h1 { font-size: var(--fs-display); }
+  .topbar p { font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--text-muted); }
+
+  /* Progress demo */
+  .progress-demo .label {
+    font-size: var(--fs-caption); color: var(--text-secondary);
+    margin-bottom: 6px; display: flex; justify-content: space-between;
+  }
+  .progress-demo .label .hint { font-family: var(--font-mono); color: var(--text-muted); }
+
+  /* Form */
+  .ds-input {
+    height: 44px; padding: 0 14px;
+    background: var(--surface-card);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: var(--fs-body);
+    transition: border-color var(--dur-base) var(--ease-out),
+                box-shadow var(--dur-base) var(--ease-out);
+  }
+  .ds-input:focus {
+    outline: none;
+    border-color: var(--primary-500);
+    box-shadow: var(--shadow-focus);
+  }
+
+  /* Label flutuante mono */
+  .label-mono {
+    font-family: var(--font-mono); font-size: var(--fs-mono);
+    text-transform: uppercase; letter-spacing: var(--tracking-caps);
+    color: var(--text-secondary);
+  }
+
+  /* Link com underline animado */
+  .link {
+    color: var(--primary-500);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  /* Chip clicável (filtros) */
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 32px; padding: 0 14px;
+    background: var(--surface-card);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-full);
+    font-size: var(--fs-body-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (hover: hover) {
+    .chip:hover { border-color: var(--accent-500); color: var(--text-primary); }
+  }
+  .chip--active { background: var(--primary-700); color: var(--text-on-primary); border-color: var(--primary-700); }
+
+  /* Lista de itens (linhas estilo Linear) */
+  .list-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .list-row__avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-400), var(--primary-700));
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-on-primary); font-weight: 600; font-size: 13px;
+  }
+  .list-row__name { font-weight: 500; color: var(--text-primary); }
+  .list-row__meta { font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--text-muted); }
+
+  /* Avatar isolado */
+  .avatar-xl {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-400), var(--primary-800));
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-on-primary); font-weight: 600; font-size: 28px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ============================================================
+     RESPONSIVO
+     ============================================================ */
+  @media (max-width: 768px) {
+    body { padding: 16px 14px; padding-bottom: 64px; }
+
+    .topbar h1 { font-size: 1.875rem; }       /* 30px */
+    .section-head h2 { font-size: 1.375rem; } /* 22px */
+
+    .toggle-theme { top: 8px; right: 8px; height: 32px; padding: 0 10px; }
+
+    .grid-2, .grid-3 { gap: 12px; }
+    .row { gap: 8px; }
+
+    .field-card__head { padding: 10px 12px 4px; }
+    .field-card__value { padding: 0 12px 12px; }
+
+    .recorder { padding: 16px; }
+  }
+
+  @media (max-width: 420px) {
+    .topbar h1 { font-size: 1.625rem; }
+    .topbar p { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+  <button class="toggle-theme ds-interactive ds-press"
+          onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')">
+    Alternar tema
+  </button>
+
+  <header class="topbar">
+    <div>
+      <h1>Visagismo · v2</h1>
+      <p>design system · ferramenta, não vitrine</p>
+    </div>
+    <p>build: dark first · navy + cyan · inter</p>
+  </header>
+
+  <!-- Microinterações em destaque -->
+  <section>
+    <div class="section-head"><h2>Microinterações</h2><span class="meta">passe o mouse · toque no mobile</span></div>
+    <p style="color: var(--text-secondary); margin-bottom: 16px; max-width: 700px;">
+      Tudo abaixo só serve pra demonstrar feedback. Hover só dispara em dispositivos com mouse;
+      toque dispara <code style="font-family: var(--font-mono); font-size: 13px; padding: 1px 6px; background: var(--surface-sunken); border-radius: 4px;">:active</code> com pressão visual.
+    </p>
+    <div class="grid-2 ds-stagger">
+      <div class="card ds-interactive ds-pop" style="--i:0; cursor: pointer;">
+        <p class="label-mono" style="margin-bottom: 6px;">ds-pop</p>
+        <p style="color: var(--text-primary); font-weight: 500;">Levanta + escala no clique</p>
+        <p style="color: var(--text-muted); font-size: var(--fs-body-sm); margin-top: 4px;">Use em cards clicáveis.</p>
+      </div>
+      <div class="card ds-interactive ds-glow" style="--i:1; cursor: pointer;">
+        <p class="label-mono" style="margin-bottom: 6px;">ds-glow</p>
+        <p style="color: var(--text-primary); font-weight: 500;">Aura cyan no hover</p>
+        <p style="color: var(--text-muted); font-size: var(--fs-body-sm); margin-top: 4px;">Pra elementos de IA.</p>
+      </div>
+      <div class="card ds-interactive ds-tilt" style="--i:2; cursor: pointer;">
+        <p class="label-mono" style="margin-bottom: 6px;">ds-tilt</p>
+        <p style="color: var(--text-primary); font-weight: 500;">Inclinação 3D sutil</p>
+        <p style="color: var(--text-muted); font-size: var(--fs-body-sm); margin-top: 4px;">Vivo sem ser circense.</p>
+      </div>
+      <div class="card ds-interactive ds-shine ds-pop" style="--i:3; cursor: pointer; background: var(--primary-700); color: var(--text-on-primary); border-color: var(--primary-700);">
+        <p class="label-mono" style="margin-bottom: 6px; color: rgba(255,255,255,0.6);">ds-shine</p>
+        <p style="font-weight: 500;">Varredura de luz</p>
+        <p style="color: rgba(255,255,255,0.7); font-size: var(--fs-body-sm); margin-top: 4px;">Em superfícies escuras.</p>
+      </div>
+      <div class="card ds-interactive ds-lift ds-border-accent" style="--i:4; cursor: pointer;">
+        <p class="label-mono" style="margin-bottom: 6px;">ds-lift + border-accent</p>
+        <p style="color: var(--text-primary); font-weight: 500;">Sobe e ganha borda cyan</p>
+      </div>
+      <div class="card ds-interactive ds-press ds-ripple" style="--i:5; cursor: pointer; background: var(--accent-500); color: var(--text-on-accent); border-color: var(--accent-500); font-weight: 500;">
+        <p class="label-mono" style="margin-bottom: 6px; color: rgba(0,0,0,0.5);">ds-ripple (segure)</p>
+        <p>Clarão no centro ao apertar</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tipografia -->
+  <section>
+    <div class="section-head"><h2>Tipografia</h2><span class="meta">inter · jetbrains mono</span></div>
+    <h1 style="margin-bottom: 8px;">Cliente atende às terças. Aprovar campos rápido.</h1>
+    <h2 style="margin-bottom: 8px;">Subtítulo de seção em h2</h2>
+    <h3 style="margin-bottom: 8px;">Título de card / subtítulo</h3>
+    <p style="font-size: var(--fs-body); color: var(--text-secondary); margin-bottom: 12px;">
+      Texto de UI em <strong>Inter 500</strong>, denso e tabular para listas. Sem serifa, sem editorial.
+      Variantes: <span class="meta" style="color: var(--text-primary);">12:34 ID#a8f3</span> em mono.
+      Veja um <a href="#" class="link ds-underline">link com underline animado</a> e
+      <span class="ds-drift" style="color: var(--primary-500); cursor: pointer; font-weight: 500;">leia mais <span class="ds-icon">→</span></span>.
+    </p>
+    <p style="font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--text-secondary);">
+      const t = await transcribe(audio); // mono pra dados, timestamps e métricas
+    </p>
+  </section>
+
+  <!-- Cores -->
+  <section>
+    <div class="section-head"><h2>Paleta</h2><span class="meta">primary · accent · neutros</span></div>
+    <h3 style="margin-bottom: 12px; font-size: var(--fs-h4);">Primary (navy)</h3>
+    <div class="grid-3" style="margin-bottom: 24px;">
+      <div class="swatch"><div class="swatch__chip ds-interactive ds-press" style="background: var(--primary-300)"></div><span class="swatch__name">primary-300</span><span class="swatch__hex">#8FA0F6</span></div>
+      <div class="swatch"><div class="swatch__chip ds-interactive ds-press" style="background: var(--primary-500)"></div><span class="swatch__name">primary-500</span><span class="swatch__hex">#3949AB</span></div>
+      <div class="swatch"><div class="swatch__chip ds-interactive ds-press" style="background: var(--primary-700)"></div><span class="swatch__name">primary-700</span><span class="swatch__hex">#1E2A66</span></div>
+      <div class="swatch"><div class="swatch__chip ds-interactive ds-press" style="background: var(--primary-900)"></div><span class="swatch__name">primary-900</span><span class="swatch__hex">#0D1738</span></div>
+    </div>
+    <h3 style="margin-bottom: 12px; font-size: var(--fs-h4);">Accent (cyan)</h3>
+    <div class="grid-3" style="margin-bottom: 24px;">
+      <div class="swatch"><div class="swatch__chip ds-interactive ds-press" style="background: var(--accent-300)"></div><span class="swatch__name">accent-300</span><span class="swatch__hex">#67E8F9</span></div>
+      <div class="swatch"><div class="swatch__chip ds-interactive ds-press" style="background: var(--accent-500)"></div><span class="swatch__name">accent-500</span><span class="swatch__hex">#06B6D4</span></div>
+      <div class="swatch"><div class="swatch__chip ds-interactive ds-press" style="background: var(--accent-700)"></div><span class="swatch__name">accent-700</span><span class="swatch__hex">#0E7490</span></div>
+    </div>
+    <h3 style="margin-bottom: 12px; font-size: var(--fs-h4);">Superfícies (tema atual)</h3>
+    <div class="grid-3">
+      <div class="swatch"><div class="swatch__chip ds-interactive ds-press" style="background: var(--surface-page)"></div><span class="swatch__name">surface-page</span></div>
+      <div class="swatch"><div class="swatch__chip ds-interactive ds-press" style="background: var(--surface-card)"></div><span class="swatch__name">surface-card</span></div>
+      <div class="swatch"><div class="swatch__chip ds-interactive ds-press" style="background: var(--surface-raised)"></div><span class="swatch__name">surface-raised</span></div>
+      <div class="swatch"><div class="swatch__chip ds-interactive ds-press" style="background: var(--surface-sunken)"></div><span class="swatch__name">surface-sunken</span></div>
+    </div>
+  </section>
+
+  <!-- Botões -->
+  <section>
+    <div class="section-head"><h2>Botões</h2><span class="meta">ds-pop em todos · ripple no accent</span></div>
+    <div class="row">
+      <button class="btn btn--primary ds-interactive ds-pop ds-shine">Salvar dossiê</button>
+      <button class="btn btn--secondary ds-interactive ds-pop">Cancelar</button>
+      <button class="btn btn--accent ds-interactive ds-pop ds-ripple">⚡ Gerar com IA</button>
+      <button class="btn btn--destructive ds-interactive ds-pop">Apagar cliente</button>
+      <button class="btn btn--ghost ds-interactive ds-press">Voltar</button>
+    </div>
+    <div class="row">
+      <button class="btn btn--primary btn--sm ds-interactive ds-pop">Pequeno</button>
+      <button class="btn btn--primary ds-interactive ds-pop">Médio</button>
+      <button class="btn btn--primary btn--lg ds-interactive ds-pop ds-shine">Grande (44pt)</button>
+    </div>
+    <div class="row">
+      <button class="btn btn--primary" disabled><span class="ds-spinner"></span> Processando…</button>
+      <button class="btn btn--secondary" disabled><span class="ds-spinner"></span> Salvando rascunho</button>
+    </div>
+  </section>
+
+  <!-- Loading & Progresso -->
+  <section>
+    <div class="section-head"><h2>Loading e processamento</h2><span class="meta">o ponto-chave da v2</span></div>
+
+    <div class="grid-2">
+      <div class="card progress-demo ds-interactive ds-pop">
+        <div class="label"><span>Transcrevendo áudio</span><span class="hint">62%</span></div>
+        <div class="ds-progress"><div class="ds-progress__fill ds-progress__fill--shimmer" style="width: 62%"></div></div>
+        <p style="font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--text-muted); margin-top: 10px;">duração: 04:32 · gemini 2.5 flash</p>
+      </div>
+
+      <div class="card progress-demo ds-interactive ds-pop">
+        <div class="label"><span>Subindo arquivo</span><span class="hint">28%</span></div>
+        <div class="ds-progress"><div class="ds-progress__fill" style="width: 28%; background: linear-gradient(90deg, var(--accent-500), var(--primary-500))"></div></div>
+      </div>
+
+      <div class="card progress-demo ds-interactive ds-pop">
+        <div class="label"><span>Classificando em campos</span><span class="hint">estimando…</span></div>
+        <div class="ds-progress ds-progress--indeterminate"></div>
+      </div>
+
+      <div class="card ds-interactive ds-pop">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span class="ds-spinner" style="font-size: 18px;"></span>
+          <span style="color: var(--text-secondary);">Salvando rascunho</span>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin: 24px 0 12px; font-size: var(--fs-h4);">Skeleton (placeholder)</h3>
+    <div class="grid-2">
+      <div class="card" style="padding: 0;">
+        <div style="padding: 16px; display: flex; align-items: center; gap: 12px;">
+          <span class="ds-skeleton" style="width: 40px; height: 40px; border-radius: 50%;"></span>
+          <span style="flex: 1; min-width: 0;">
+            <span class="ds-skeleton" style="display: block; width: 60%; max-width: 160px; height: 14px; margin-bottom: 6px;"></span>
+            <span class="ds-skeleton" style="display: block; width: 40%; max-width: 100px; height: 12px;"></span>
+          </span>
+          <span class="ds-skeleton" style="width: 64px; height: 24px; border-radius: 9999px;"></span>
+        </div>
+        <div style="padding: 16px; display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border-subtle);">
+          <span class="ds-skeleton" style="width: 40px; height: 40px; border-radius: 50%;"></span>
+          <span style="flex: 1; min-width: 0;">
+            <span class="ds-skeleton" style="display: block; width: 50%; max-width: 140px; height: 14px; margin-bottom: 6px;"></span>
+            <span class="ds-skeleton" style="display: block; width: 30%; max-width: 80px; height: 12px;"></span>
+          </span>
+          <span class="ds-skeleton" style="width: 64px; height: 24px; border-radius: 9999px;"></span>
+        </div>
+      </div>
+
+      <div class="card" style="display: flex; flex-direction: column; gap: 10px;">
+        <span class="ds-skeleton" style="width: 120px; height: 12px;"></span>
+        <span class="ds-skeleton" style="width: 100%; height: 18px;"></span>
+        <span class="ds-skeleton" style="width: 75%; height: 18px;"></span>
+        <div style="display: flex; gap: 8px; margin-top: 4px;">
+          <span class="ds-skeleton" style="width: 60px; height: 28px; border-radius: 9999px;"></span>
+          <span class="ds-skeleton" style="width: 80px; height: 28px; border-radius: 9999px;"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Status pills + Field cards -->
+  <section>
+    <div class="section-head"><h2>Status do dossiê</h2><span class="meta">5 estados · regra do produto</span></div>
+    <div class="row">
+      <span class="pill pill--vazio"><span class="pill__dot"></span>Vazio</span>
+      <span class="pill pill--sugerido"><span class="pill__dot"></span>IA sugeriu</span>
+      <span class="pill pill--editado"><span class="pill__dot"></span>Editado</span>
+      <span class="pill pill--aprovado"><span class="pill__dot"></span>Aprovado</span>
+      <span class="pill pill--conflito"><span class="pill__dot"></span>Conflito</span>
+    </div>
+
+    <div class="grid-2 ds-stagger" style="margin-top: 16px;">
+      <div class="field-card ds-interactive ds-press" data-status="sugerido" style="--i:0;">
+        <div class="field-card__head">
+          <span class="field-card__label">Objetivo de imagem</span>
+          <span class="pill pill--sugerido"><span class="pill__dot"></span>IA</span>
+        </div>
+        <div class="field-card__value" style="color: var(--text-secondary);">
+          Transmitir autoridade tranquila, sem rigidez. Audiência: lideranças e clientes seniores.
+        </div>
+      </div>
+      <div class="field-card ds-interactive ds-press" data-status="aprovado" style="--i:1;">
+        <div class="field-card__head">
+          <span class="field-card__label">Profissão / contexto</span>
+          <span class="pill pill--aprovado"><span class="pill__dot"></span>Aprovado</span>
+        </div>
+        <div class="field-card__value">
+          Sócio em escritório de advocacia tributária; reuniões diárias com C-level.
+        </div>
+      </div>
+      <div class="field-card ds-interactive ds-press" data-status="editado" style="--i:2;">
+        <div class="field-card__head">
+          <span class="field-card__label">Estilo de corte ideal</span>
+          <span class="pill pill--editado"><span class="pill__dot"></span>Editado</span>
+        </div>
+        <div class="field-card__value">
+          Corte clássico executivo, transição média, topo com 4-5cm para volume controlado.
+        </div>
+      </div>
+      <div class="field-card ds-interactive ds-press" data-status="conflito" style="--i:3;">
+        <div class="field-card__head">
+          <span class="field-card__label">Linha de contorno</span>
+          <span class="pill pill--conflito"><span class="pill__dot"></span>Conflito</span>
+        </div>
+        <div class="field-card__value">
+          A IA detectou contradição: cliente disse "barba cheia" mas também "alinhamento mais limpo nas bochechas". Revisar.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Audio recorder -->
+  <section>
+    <div class="section-head"><h2>Gravador de áudio</h2><span class="meta">5 fases · barra ao vivo</span></div>
+
+    <div class="grid-2">
+      <div class="recorder ds-interactive ds-pop">
+        <div class="recorder__head">
+          <div class="recorder__phase">
+            <span class="live-dot live-dot--rec"></span>
+            <span>Gravando</span>
+          </div>
+          <span class="recorder__time">02:14</span>
+        </div>
+        <div class="row" style="margin: 0;">
+          <button class="btn btn--primary btn--lg ds-interactive ds-pop">■ Parar e enviar</button>
+          <button class="btn btn--ghost btn--lg ds-interactive ds-press">Descartar</button>
+        </div>
+      </div>
+
+      <div class="recorder ds-interactive ds-pop">
+        <div class="recorder__head">
+          <div class="recorder__phase">
+            <span class="live-dot live-dot--proc"></span>
+            <span>Transcrevendo áudio</span>
+          </div>
+          <span class="recorder__time">02:14</span>
+        </div>
+        <div class="progress-demo">
+          <div class="label"><span>Transcrevendo áudio</span><span class="hint">47%</span></div>
+          <div class="ds-progress"><div class="ds-progress__fill ds-progress__fill--shimmer" style="width: 47%"></div></div>
+        </div>
+        <button class="btn btn--secondary btn--lg" disabled><span class="ds-spinner"></span> Transcrevendo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lista estilo Linear -->
+  <section>
+    <div class="section-head"><h2>Lista de clientes</h2><span class="meta">linhas estilo linear · chips de filtro</span></div>
+
+    <div class="row" style="margin-bottom: 20px;">
+      <span class="chip chip--active ds-interactive ds-press">Todos · 47</span>
+      <span class="chip ds-interactive ds-press">Ativos</span>
+      <span class="chip ds-interactive ds-press">Dormindo</span>
+      <span class="chip ds-interactive ds-press">Frios</span>
+      <span class="chip ds-interactive ds-press">Aniversariantes</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div class="list-row ds-interactive ds-pop">
+        <div class="list-row__avatar">JP</div>
+        <div style="flex: 1; min-width: 0;">
+          <p class="list-row__name">João Pereira</p>
+          <p class="list-row__meta">há 12 dias · Pomada Forte</p>
+        </div>
+        <span class="pill pill--aprovado"><span class="pill__dot"></span>Ativo</span>
+      </div>
+      <div class="list-row ds-interactive ds-pop">
+        <div class="list-row__avatar" style="background: linear-gradient(135deg, var(--accent-400), var(--accent-700));">LM</div>
+        <div style="flex: 1; min-width: 0;">
+          <p class="list-row__name">Lucas Moraes</p>
+          <p class="list-row__meta">há 38 dias</p>
+        </div>
+        <span class="pill pill--editado"><span class="pill__dot"></span>Dormindo</span>
+      </div>
+      <div class="list-row ds-interactive ds-pop">
+        <div class="list-row__avatar" style="background: linear-gradient(135deg, var(--neutral-500), var(--neutral-700));">RS</div>
+        <div style="flex: 1; min-width: 0;">
+          <p class="list-row__name">Rafael Santos</p>
+          <p class="list-row__meta">há 92 dias</p>
+        </div>
+        <span class="pill pill--conflito"><span class="pill__dot"></span>Frio</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Inputs -->
+  <section>
+    <div class="section-head"><h2>Formulários</h2><span class="meta">tabular · 44pt iPad</span></div>
+    <div style="max-width: 480px; display: flex; flex-direction: column; gap: 16px;">
+      <label style="display: flex; flex-direction: column; gap: 6px;">
+        <span class="label-mono">Nome do cliente</span>
+        <input class="ds-input" placeholder="João Pereira">
+      </label>
+      <label style="display: flex; flex-direction: column; gap: 6px;">
+        <span class="label-mono">Resumo do atendimento</span>
+        <textarea class="ds-input" rows="3" style="height: auto; padding: 12px 14px; resize: vertical; font-family: inherit;" placeholder="Manutenção do degradê, redução de volume, alinhamento da barba."></textarea>
+      </label>
+      <div class="row">
+        <button class="btn btn--primary ds-interactive ds-pop ds-shine">Salvar</button>
+        <button class="btn btn--ghost ds-interactive ds-press">Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Avatar & detalhes -->
+  <section>
+    <div class="section-head"><h2>Avatar e identidade</h2><span class="meta">ds-tilt + ds-pop</span></div>
+    <div class="row" style="gap: 16px;">
+      <div class="avatar-xl ds-interactive ds-tilt ds-pop">JP</div>
+      <div class="avatar-xl ds-interactive ds-tilt ds-pop" style="background: linear-gradient(135deg, var(--accent-400), var(--accent-700));">LM</div>
+      <div class="avatar-xl ds-interactive ds-tilt ds-pop" style="background: linear-gradient(135deg, var(--neutral-500), var(--neutral-800));">RS</div>
+    </div>
+  </section>
+
+  <footer style="padding-top: 32px; border-top: 1px solid var(--border-subtle); margin-top: 48px;">
+    <p style="font-family: var(--font-mono); font-size: var(--fs-mono); color: var(--text-muted);">
+      design-system-v2 · não aplicado no app · alterne ☝ pra ver dark mode
+    </p>
+  </footer>
+</body>
+</html>

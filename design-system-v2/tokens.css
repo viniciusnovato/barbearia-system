@@ -1,0 +1,556 @@
+/* ============================================================
+   VISAGISMO V2 — Design Tokens
+   Filosofia: ferramenta de trabalho, não vitrine.
+   Estética: tech, moderno, alto contraste, neutro frio.
+   Base: navy escuro + branco, acento elétrico.
+   ============================================================ */
+
+:root {
+  /* ---------- NEUTROS FRIOS (slate) ---------- */
+  --neutral-0:   #FFFFFF;
+  --neutral-50:  #F8FAFC;
+  --neutral-100: #F1F5F9;
+  --neutral-200: #E2E8F0;
+  --neutral-300: #CBD5E1;
+  --neutral-400: #94A3B8;
+  --neutral-500: #64748B;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-800: #1E293B;
+  --neutral-900: #0F172A;
+  --neutral-950: #020617;
+
+  /* ---------- PRIMÁRIA: Navy escuro ---------- */
+  /* "Azul marinho bem escuro" = navy próximo de slate-900 com saturação */
+  --primary-50:  #EEF2FF;
+  --primary-100: #DBE3FF;
+  --primary-200: #B8C5FF;
+  --primary-300: #8FA0F6;
+  --primary-400: #5C70DA;
+  --primary-500: #3949AB;     /* base */
+  --primary-600: #2A3686;
+  --primary-700: #1E2A66;     /* navy escuro */
+  --primary-800: #15214E;
+  --primary-900: #0D1738;
+  --primary-950: #060B1F;
+
+  /* ---------- ACENTO: Cyan elétrico (sinal de "ativo / IA / processando") ---------- */
+  --accent-50:  #ECFEFF;
+  --accent-100: #CFFAFE;
+  --accent-200: #A5F3FC;
+  --accent-300: #67E8F9;
+  --accent-400: #22D3EE;
+  --accent-500: #06B6D4;      /* base */
+  --accent-600: #0891B2;
+  --accent-700: #0E7490;
+  --accent-800: #155E75;
+  --accent-900: #164E63;
+
+  /* ---------- STATUS DE CAMPO ---------- */
+  --status-empty-bg:    var(--neutral-100);
+  --status-empty-fg:    var(--neutral-500);
+  --status-empty-ring:  var(--neutral-200);
+
+  --status-suggested-bg:   #ECFEFF;
+  --status-suggested-fg:   #155E75;
+  --status-suggested-ring: #67E8F9;
+
+  --status-edited-bg:   #FEF3C7;
+  --status-edited-fg:   #854D0E;
+  --status-edited-ring: #FDE68A;
+
+  --status-approved-bg:   #DCFCE7;
+  --status-approved-fg:   #166534;
+  --status-approved-ring: #86EFAC;
+
+  --status-conflict-bg:   #FEE2E2;
+  --status-conflict-fg:   #991B1B;
+  --status-conflict-ring: #FCA5A5;
+
+  /* ---------- FEEDBACK ---------- */
+  --success: #16A34A;
+  --warning: #D97706;
+  --danger:  #DC2626;
+  --info:    var(--accent-500);
+
+  /* ---------- SUPERFÍCIES (light) ---------- */
+  --surface-page:    var(--neutral-50);
+  --surface-card:    var(--neutral-0);
+  --surface-raised:  var(--neutral-0);
+  --surface-sunken:  var(--neutral-100);
+  --surface-overlay: rgba(2, 6, 23, 0.55);
+
+  --border-subtle: var(--neutral-200);
+  --border-strong: var(--neutral-300);
+  --border-focus:  var(--primary-500);
+
+  --text-primary:    var(--neutral-900);
+  --text-secondary:  var(--neutral-600);
+  --text-muted:      var(--neutral-500);
+  --text-on-primary: var(--neutral-0);
+  --text-on-accent:  var(--neutral-900);
+
+  /* ---------- TIPOGRAFIA ----------
+     Inter variable (UI) + JetBrains Mono (timestamps, IDs, barras de progresso).
+     Fonte single, geométrica, técnica. Sem serif. */
+  --font-display: "Inter", "InterVariable", "Söhne", system-ui, -apple-system, sans-serif;
+  --font-sans:    "Inter", "InterVariable", "Söhne", system-ui, -apple-system, sans-serif;
+  --font-mono:    "JetBrains Mono", "Geist Mono", "SF Mono", Menlo, monospace;
+
+  /* Display levemente menor — UI densa, legível, não editorial */
+  --fs-display: 2.5rem;     /* 40 */
+  --fs-h1:      2rem;       /* 32 */
+  --fs-h2:      1.625rem;   /* 26 */
+  --fs-h3:      1.25rem;    /* 20 */
+  --fs-h4:      1.0625rem;  /* 17 */
+  --fs-body-lg: 1rem;       /* 16 */
+  --fs-body:    0.9375rem;  /* 15 */
+  --fs-body-sm: 0.8125rem;  /* 13 */
+  --fs-caption: 0.75rem;    /* 12 */
+  --fs-mono:    0.8125rem;  /* 13 */
+
+  --lh-tight:   1.2;
+  --lh-snug:    1.35;
+  --lh-normal:  1.5;
+  --lh-relaxed: 1.65;
+
+  --tracking-tight:  -0.015em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.02em;
+  --tracking-caps:   0.06em;
+
+  /* Pesos: variable Inter */
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+
+  /* ---------- ESPAÇAMENTO (base 4px) ---------- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-7:  32px;
+  --space-8:  48px;
+  --space-9:  64px;
+
+  /* ---------- RAIO ----------
+     Reduzido — bordas mais retas dão sensação técnica.
+     Mantido raio cheio para chips/botões pílula. */
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   8px;
+  --radius-xl:   12px;
+  --radius-2xl:  16px;
+  --radius-full: 9999px;
+
+  /* ---------- ELEVAÇÃO ----------
+     Sombras menores e mais frias. Tech apps usam sombra com discrição;
+     contraste de borda + bg faz mais peso visual do que blur. */
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-2: 0 2px 4px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-3: 0 6px 16px rgba(15, 23, 42, 0.10), 0 2px 4px rgba(15, 23, 42, 0.05);
+  --shadow-4: 0 16px 36px rgba(15, 23, 42, 0.16), 0 4px 8px rgba(15, 23, 42, 0.06);
+  --shadow-focus:    0 0 0 3px rgba(57, 73, 171, 0.32);
+  --shadow-focus-ai: 0 0 0 3px rgba(6, 182, 212, 0.30);
+
+  /* ---------- MOVIMENTO ---------- */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast:    100ms;
+  --dur-base:    160ms;
+  --dur-slow:    260ms;
+
+  /* ---------- TOQUE ---------- */
+  --touch-min: 44px;
+
+  /* ---------- Z ---------- */
+  --z-base:    1;
+  --z-raised:  10;
+  --z-overlay: 100;
+  --z-modal:   1000;
+  --z-toast:   2000;
+}
+
+/* ============================================================
+   DARK MODE — base do produto (cliente trabalha em ambiente
+   variado, navy escuro reduz fadiga e sustenta o "tech feel").
+   ============================================================ */
+[data-theme="dark"] {
+  --surface-page:    #0B1220;       /* navy bem escuro, levemente azulado */
+  --surface-card:    #111A2E;
+  --surface-raised:  #162038;
+  --surface-sunken:  #07101F;
+  --surface-overlay: rgba(0, 0, 0, 0.7);
+
+  --border-subtle: #1E2A44;
+  --border-strong: #2A3A5C;
+  --border-focus:  var(--accent-400);
+
+  --text-primary:   #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted:     #64748B;
+  --text-on-primary: #FFFFFF;
+  --text-on-accent:  #0B1220;
+
+  --primary-500: #5C70DA;           /* boost no escuro */
+  --primary-600: #4456C2;
+
+  --status-empty-bg:    #131C30;
+  --status-empty-fg:    #64748B;
+  --status-empty-ring:  #1E2A44;
+
+  --status-suggested-bg:   #082431;
+  --status-suggested-fg:   #67E8F9;
+  --status-suggested-ring: #155E75;
+
+  --status-edited-bg:   #2D2204;
+  --status-edited-fg:   #FCD34D;
+  --status-edited-ring: #854D0E;
+
+  --status-approved-bg:   #0E2A18;
+  --status-approved-fg:   #86EFAC;
+  --status-approved-ring: #166534;
+
+  --status-conflict-bg:   #2A0F0F;
+  --status-conflict-fg:   #FCA5A5;
+  --status-conflict-ring: #991B1B;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-2: 0 2px 4px rgba(0, 0, 0, 0.55);
+  --shadow-3: 0 6px 16px rgba(0, 0, 0, 0.65);
+  --shadow-4: 0 16px 36px rgba(0, 0, 0, 0.78);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--surface-page);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv11"; /* Inter alternates: i ponto reto, l simples */
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--lh-tight);
+  margin: 0;
+}
+h1 { font-size: var(--fs-h1); }
+h2 { font-size: var(--fs-h2); }
+h3 { font-size: var(--fs-h3); }
+h4 { font-size: var(--fs-h4); }
+
+p { margin: 0; }
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea, select { font-family: inherit; font-size: inherit; color: inherit; }
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-sm);
+}
+
+/* Scrollbar discreta tech */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--neutral-400); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ============================================================
+   UTILITÁRIOS DE LOADING / PROCESSAMENTO
+   Usar quando algo precisa renderizar feedback assíncrono.
+   ============================================================ */
+
+/* Barra determinada — usada na transcrição (0→100%) */
+.ds-progress {
+  position: relative;
+  height: 8px;
+  width: 100%;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.ds-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-500), var(--accent-500));
+  transition: width var(--dur-slow) var(--ease-out);
+}
+.ds-progress__fill--shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--primary-500) 0%,
+    var(--accent-400) 50%,
+    var(--primary-500) 100%
+  );
+  background-size: 200% 100%;
+  animation: ds-shimmer 1.6s linear infinite;
+}
+
+/* Barra indeterminada — quando não dá pra medir progresso */
+.ds-progress--indeterminate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, var(--accent-500), transparent);
+  animation: ds-progress-slide 1.4s var(--ease-in-out) infinite;
+}
+
+/* Spinner inline */
+.ds-spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  animation: ds-spin 0.8s linear infinite;
+  vertical-align: -0.15em;
+}
+
+/* Skeleton — placeholder com shimmer suave */
+.ds-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-sunken) 0%,
+    var(--neutral-200) 50%,
+    var(--surface-sunken) 100%
+  );
+  background-size: 200% 100%;
+  animation: ds-shimmer 1.6s linear infinite;
+  border-radius: var(--radius-md);
+}
+[data-theme="dark"] .ds-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-sunken) 0%,
+    var(--surface-raised) 50%,
+    var(--surface-sunken) 100%
+  );
+  background-size: 200% 100%;
+}
+
+/* Pulso sobre elemento "vivo" — uso ao gravar */
+.ds-pulse {
+  position: relative;
+}
+.ds-pulse::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid var(--danger);
+  opacity: 0.6;
+  animation: ds-pulse-ring 1.4s var(--ease-out) infinite;
+}
+
+/* ============================================================
+   MICROINTERAÇÕES
+   Aspecto "vivo" mesmo em elementos sem ação. Mobile-friendly:
+   o press funciona por :active, e :hover é gateado por
+   @media (hover: hover) pra não ficar grudado em touch.
+   ============================================================ */
+
+/* Base — qualquer elemento interativo herda essa transição */
+.ds-interactive {
+  transition: transform var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out),
+              background-color var(--dur-base) var(--ease-out),
+              color var(--dur-base) var(--ease-out);
+  will-change: transform;
+}
+
+/* Lift — sobe 2px e ganha sombra; toque retorna pro lugar */
+@media (hover: hover) {
+  .ds-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-3);
+    border-color: var(--border-strong);
+  }
+}
+.ds-lift:active {
+  transform: translateY(0);
+  transition-duration: var(--dur-fast);
+}
+
+/* Press — escala leve no clique/toque */
+.ds-press:active {
+  transform: scale(0.97);
+  transition-duration: 80ms;
+}
+
+/* Pop — combina lift + press, ideal pra cards/botões */
+@media (hover: hover) {
+  .ds-pop:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-2);
+  }
+}
+.ds-pop:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 80ms;
+}
+
+/* Glow — aura cyan no hover (acento IA, "ativável") */
+@media (hover: hover) {
+  .ds-glow:hover {
+    box-shadow: 0 0 0 1px var(--accent-400),
+                0 0 16px -2px rgba(6, 182, 212, 0.45);
+    border-color: var(--accent-500);
+  }
+}
+
+/* Tilt — rotação 3D sutil. Não use em texto longo. */
+.ds-tilt {
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+@media (hover: hover) {
+  .ds-tilt:hover {
+    transform: perspective(800px) rotateX(2deg) rotateY(-2deg) translateZ(2px);
+  }
+}
+
+/* Shine — varredura de luz diagonal no hover.
+   Use ::after; o elemento precisa de overflow:hidden e position:relative. */
+.ds-shine { position: relative; overflow: hidden; isolation: isolate; }
+.ds-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  transition: transform var(--dur-slow) var(--ease-out);
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .ds-shine:hover::after { transform: translateX(100%); }
+}
+
+/* Underline — sublinhado que cresce do centro */
+.ds-underline {
+  position: relative;
+  display: inline-block;
+}
+.ds-underline::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: -2px;
+  height: 1.5px;
+  background: currentColor;
+  transition: left var(--dur-base) var(--ease-out),
+              right var(--dur-base) var(--ease-out);
+}
+@media (hover: hover) {
+  .ds-underline:hover::after { left: 0; right: 0; }
+}
+
+/* Icon drift — movimenta uma seta/ícone .ds-icon dentro do hover */
+.ds-drift .ds-icon {
+  display: inline-block;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+@media (hover: hover) {
+  .ds-drift:hover .ds-icon { transform: translateX(3px); }
+}
+
+/* Border accent — borda muda pra primary/accent no hover */
+@media (hover: hover) {
+  .ds-border-accent:hover { border-color: var(--accent-500); }
+  .ds-border-primary:hover { border-color: var(--primary-500); }
+}
+
+/* Ripple-light — clarão no centro ao apertar.
+   Funciona com :active (mobile e mouse). */
+.ds-ripple { position: relative; overflow: hidden; }
+.ds-ripple::before {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 0; height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transform: translate(-50%, -50%);
+  transition: width var(--dur-slow) var(--ease-out),
+              height var(--dur-slow) var(--ease-out),
+              opacity var(--dur-slow) var(--ease-out);
+  opacity: 0;
+  pointer-events: none;
+}
+.ds-ripple:active::before {
+  width: 240px; height: 240px;
+  opacity: 1;
+  transition-duration: 0ms;
+}
+
+/* Float — flutua de leve continuamente, ideal pra "destaque vivo" */
+.ds-float { animation: ds-float 4s ease-in-out infinite; }
+
+/* Reveal — entrada suave (use em cards que aparecem) */
+.ds-reveal { animation: ds-reveal var(--dur-slow) var(--ease-out) both; }
+
+/* Stagger — delay incremental, aplicar no pai usando css var --i */
+.ds-stagger > * {
+  animation: ds-reveal var(--dur-slow) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+/* ---------- Keyframes ---------- */
+@keyframes ds-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes ds-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+@keyframes ds-progress-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+@keyframes ds-pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  100% { transform: scale(1.5); opacity: 0;   }
+}
+@keyframes ds-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+@keyframes ds-reveal {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
